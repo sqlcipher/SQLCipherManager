@@ -1,0 +1,166 @@
+// !$*UTF8*$!
+{
+	0867D690FE84028FC02AAC07 /* Project object */ = {
+		activeBuildConfigurationName = Debug;
+		activeTarget = D2AAC07D0554694100DB518D /* SQLCipherManager */;
+		addToTargets = (
+			D2AAC07D0554694100DB518D /* SQLCipherManager */,
+		);
+		codeSenseManager = 136DF16810F261C0000DDCA7 /* Code sense */;
+		perUserDictionary = {
+			PBXConfiguration.PBXFileTableDataSource3.PBXFileTableDataSource = {
+				PBXFileTableDataSourceColumnSortingDirectionKey = "-1";
+				PBXFileTableDataSourceColumnSortingKey = PBXFileDataSource_Filename_ColumnID;
+				PBXFileTableDataSourceColumnWidthsKey = (
+					20,
+					665,
+					20,
+					48,
+					43,
+					43,
+					20,
+				);
+				PBXFileTableDataSourceColumnsKey = (
+					PBXFileDataSource_FiletypeID,
+					PBXFileDataSource_Filename_ColumnID,
+					PBXFileDataSource_Built_ColumnID,
+					PBXFileDataSource_ObjectSize_ColumnID,
+					PBXFileDataSource_Errors_ColumnID,
+					PBXFileDataSource_Warnings_ColumnID,
+					PBXFileDataSource_Target_ColumnID,
+				);
+			};
+			PBXConfiguration.PBXTargetDataSource.PBXTargetDataSource = {
+				PBXFileTableDataSourceColumnSortingDirectionKey = "-1";
+				PBXFileTableDataSourceColumnSortingKey = PBXFileDataSource_Filename_ColumnID;
+				PBXFileTableDataSourceColumnWidthsKey = (
+					20,
+					625,
+					60,
+					20,
+					48.16259765625,
+					43,
+					43,
+				);
+				PBXFileTableDataSourceColumnsKey = (
+					PBXFileDataSource_FiletypeID,
+					PBXFileDataSource_Filename_ColumnID,
+					PBXTargetDataSource_PrimaryAttribute,
+					PBXFileDataSource_Built_ColumnID,
+					PBXFileDataSource_ObjectSize_ColumnID,
+					PBXFileDataSource_Errors_ColumnID,
+					PBXFileDataSource_Warnings_ColumnID,
+				);
+			};
+			PBXPerProjectTemplateStateSaveDate = 284405553;
+			PBXWorkspaceStateSaveDate = 284405553;
+		};
+		perUserProjectItems = {
+			136DF19A10F26B5C000DDCA7 = 136DF19A10F26B5C000DDCA7 /* PBXTextBookmark */;
+			136DF19B10F26B5C000DDCA7 = 136DF19B10F26B5C000DDCA7 /* PBXTextBookmark */;
+			136DF19D10F26B5C000DDCA7 = 136DF19D10F26B5C000DDCA7 /* PBXTextBookmark */;
+			136DF19E10F26B5C000DDCA7 = 136DF19E10F26B5C000DDCA7 /* PBXTextBookmark */;
+			136DF46010F27E00000DDCA7 = 136DF46010F27E00000DDCA7 /* PBXTextBookmark */;
+			136DF46110F27E00000DDCA7 = 136DF46110F27E00000DDCA7 /* PBXTextBookmark */;
+		};
+		sourceControlManager = 136DF16710F261C0000DDCA7 /* Source Control */;
+		userBuildSettings = {
+		};
+	};
+	136DF16710F261C0000DDCA7 /* Source Control */ = {
+		isa = PBXSourceControlManager;
+		fallbackIsa = XCSourceControlManager;
+		isSCMEnabled = 0;
+		scmConfiguration = {
+		};
+	};
+	136DF16810F261C0000DDCA7 /* Code sense */ = {
+		isa = PBXCodeSenseManager;
+		indexTemplatePath = "";
+	};
+	136DF18A10F26A3A000DDCA7 /* SQLCipherManager.h */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {843, 1200}}";
+			sepNavSelRange = "{298, 0}";
+			sepNavVisRange = "{36, 613}";
+		};
+	};
+	136DF18B10F26A3A000DDCA7 /* SQLCipherManager.m */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {1132, 5248}}";
+			sepNavSelRange = "{5742, 77}";
+			sepNavVisRange = "{4685, 511}";
+			sepNavWindowFrame = "{{153, 47}, {1278, 700}}";
+		};
+	};
+	136DF19A10F26B5C000DDCA7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 32DBCF5E0370ADEE00C91783 /* SQLCipherManager_Prefix.pch */;
+		name = "SQLCipherManager_Prefix.pch: 7";
+		rLen = 0;
+		rLoc = 173;
+		rType = 0;
+		vrLen = 174;
+		vrLoc = 0;
+	};
+	136DF19B10F26B5C000DDCA7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 136DF18B10F26A3A000DDCA7 /* SQLCipherManager.m */;
+		name = "SQLCipherManager.m: 156";
+		rLen = 77;
+		rLoc = 5742;
+		rType = 0;
+		vrLen = 1053;
+		vrLoc = 4586;
+	};
+	136DF19D10F26B5C000DDCA7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 32DBCF5E0370ADEE00C91783 /* SQLCipherManager_Prefix.pch */;
+		name = "SQLCipherManager_Prefix.pch: 7";
+		rLen = 0;
+		rLoc = 173;
+		rType = 0;
+		vrLen = 174;
+		vrLoc = 0;
+	};
+	136DF19E10F26B5C000DDCA7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 136DF18B10F26A3A000DDCA7 /* SQLCipherManager.m */;
+		name = "SQLCipherManager.m: 156";
+		rLen = 77;
+		rLoc = 5742;
+		rType = 0;
+		vrLen = 1053;
+		vrLoc = 4586;
+	};
+	136DF46010F27E00000DDCA7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 136DF18A10F26A3A000DDCA7 /* SQLCipherManager.h */;
+		name = "SQLCipherManager.h: 9";
+		rLen = 0;
+		rLoc = 168;
+		rType = 0;
+		vrLen = 613;
+		vrLoc = 36;
+	};
+	136DF46110F27E00000DDCA7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 136DF18A10F26A3A000DDCA7 /* SQLCipherManager.h */;
+		name = "SQLCipherManager.h: 15";
+		rLen = 0;
+		rLoc = 298;
+		rType = 0;
+		vrLen = 613;
+		vrLoc = 36;
+	};
+	32DBCF5E0370ADEE00C91783 /* SQLCipherManager_Prefix.pch */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {747, 317}}";
+			sepNavSelRange = "{173, 0}";
+			sepNavVisRange = "{0, 174}";
+		};
+	};
+	D2AAC07D0554694100DB518D /* SQLCipherManager */ = {
+		activeExec = 0;
+	};
+}
