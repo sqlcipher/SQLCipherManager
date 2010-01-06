@@ -7,7 +7,22 @@ SQLCipherManager is a class implementing a singleton object for accessing the da
 
 We needed a singleton object/class for our iPhone application using SQLCipher, and this implements a delegate protocol they can use to respond to interesting events. An application might be wired create an application-specific schema once the database is created, or it might be configured to check the schema version after the database is opened and do a migration if it's out of date.
 
-Usage example from our iPhone application Strip:
+Usage example from the application delegate of our iPhone application Strip:
+
+    - (void)applicationDidFinishLaunching:(UIApplication *)application {
+    	NSLog(@"Setting up sqlcipher manager, and ourself as delegate...");
+    	// setup the db manager register as the delegate
+    	SQLCipherManager *dm = [SQLCipherManager sharedManager];
+    	[dm setDelegate:self];
+    	// set the databasePath property (required), use default iphone app documents directory
+    	NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    	NSString *saveDirectory = [paths objectAtIndex:0];
+    	NSString *databasePath = [saveDirectory stringByAppendingPathComponent:CONFIG_DBNAME];
+    	NSLog(@"setting db path to %@", databasePath);
+    	[dm setDatabasePath:databasePath];
+
+    	[self launchLoginView];
+    }
 
     # pragma mark -
     # pragma mark SQLCipherManagerDelegate
