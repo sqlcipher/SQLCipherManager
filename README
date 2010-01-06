@@ -5,6 +5,13 @@ http://github.com/sjlombardo/sqlcipher
 
 SQLCipherManager is a class implementing a singleton object for accessing the database connection. Sounds fairly unnecessary until you consider that SQLCipher databases are protected by a key, the databases can be re-keyed, there are optional settings for key-derivation and AES cipher modes, and it's the kind of code you'd want to re-use in multiple programs.
 
+Questions about this code can be posted to the SQLCipher-Users Google Group:
+http://groups.google.com/group/sqlcipher
+
+Please use the Github Issues tracker to report bugs and make enhancement requests or, better yet, fork the code and send pull requests / patches.
+
+Discussion:
+
 We needed a singleton object/class for our iPhone application using SQLCipher, and this implements a delegate protocol they can use to respond to interesting events. An application might be wired create an application-specific schema once the database is created, or it might be configured to check the schema version after the database is opened and do a migration if it's out of date.
 
 Usage example from the application delegate of our iPhone application Strip:
