@@ -228,8 +228,6 @@
 			<key>Layout</key>
 			<array>
 				<dict>
-					<key>BecomeActive</key>
-					<true/>
 					<key>ContentConfiguration</key>
 					<dict>
 						<key>PBXBottomSmartGroupGIDs</key>
@@ -272,12 +270,13 @@
 								<string>1058C7B0FEA5585E11CA2CBB</string>
 								<string>1058C7B2FEA5585E11CA2CBB</string>
 								<string>1C37FBAC04509CD000000102</string>
-								<string>136DF19910F26B5C000DDCA7</string>
 								<string>1C37FABC05509CD000000102</string>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
+									<integer>3</integer>
+									<integer>1</integer>
 									<integer>0</integer>
 								</array>
 							</array>
@@ -312,6 +311,8 @@
 					<key>Dock</key>
 					<array>
 						<dict>
+							<key>BecomeActive</key>
+							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
@@ -329,17 +330,19 @@
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>136DF46110F27E00000DDCA7</string>
+										<string>13EF551210F3D4B80097FA6F</string>
 										<key>history</key>
 										<array>
 											<string>136DF19A10F26B5C000DDCA7</string>
-											<string>136DF19B10F26B5C000DDCA7</string>
-											<string>136DF46010F27E00000DDCA7</string>
+											<string>13EF550E10F3D4B80097FA6F</string>
+											<string>13EF550F10F3D4B80097FA6F</string>
 										</array>
 										<key>prevStack</key>
 										<array>
 											<string>136DF19D10F26B5C000DDCA7</string>
 											<string>136DF19E10F26B5C000DDCA7</string>
+											<string>13EF551010F3D4B80097FA6F</string>
+											<string>13EF551110F3D4B80097FA6F</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -351,14 +354,14 @@
 							<key>GeometryConfiguration</key>
 							<dict>
 								<key>Frame</key>
-								<string>{{0, 0}, {904, 463}}</string>
+								<string>{{0, 0}, {904, 636}}</string>
 								<key>RubberWindowFrame</key>
 								<string>197 140 1187 682 0 0 1440 878 </string>
 							</dict>
 							<key>Module</key>
 							<string>PBXNavigatorGroup</string>
 							<key>Proportion</key>
-							<string>463pt</string>
+							<string>636pt</string>
 						</dict>
 						<dict>
 							<key>ContentConfiguration</key>
@@ -371,14 +374,14 @@
 							<key>GeometryConfiguration</key>
 							<dict>
 								<key>Frame</key>
-								<string>{{0, 468}, {904, 173}}</string>
+								<string>{{0, 641}, {904, 0}}</string>
 								<key>RubberWindowFrame</key>
 								<string>197 140 1187 682 0 0 1440 878 </string>
 							</dict>
 							<key>Module</key>
 							<string>XCDetailModule</string>
 							<key>Proportion</key>
-							<string>173pt</string>
+							<string>0pt</string>
 						</dict>
 					</array>
 					<key>Proportion</key>
@@ -397,9 +400,9 @@
 			</array>
 			<key>TableOfContents</key>
 			<array>
-				<string>136DF18810F2621F000DDCA7</string>
+				<string>13EF551310F3D4B80097FA6F</string>
 				<string>1CE0B1FE06471DED0097A5F4</string>
-				<string>136DF18910F2621F000DDCA7</string>
+				<string>13EF551410F3D4B80097FA6F</string>
 				<string>1CE0B20306471E060097A5F4</string>
 				<string>1CE0B20506471E060097A5F4</string>
 			</array>
@@ -533,7 +536,6 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
-		<string>136DF19310F26A82000DDCA7</string>
 		<string>/Users/wgray/Documents/Sources/Cocoa/SQLCipherManager/SQLCipherManager.xcodeproj</string>
 	</array>
 	<key>WindowString</key>

@@ -56,12 +56,14 @@
 			PBXWorkspaceStateSaveDate = 284405553;
 		};
 		perUserProjectItems = {
-			136DF19A10F26B5C000DDCA7 = 136DF19A10F26B5C000DDCA7 /* PBXTextBookmark */;
-			136DF19B10F26B5C000DDCA7 = 136DF19B10F26B5C000DDCA7 /* PBXTextBookmark */;
-			136DF19D10F26B5C000DDCA7 = 136DF19D10F26B5C000DDCA7 /* PBXTextBookmark */;
-			136DF19E10F26B5C000DDCA7 = 136DF19E10F26B5C000DDCA7 /* PBXTextBookmark */;
-			136DF46010F27E00000DDCA7 = 136DF46010F27E00000DDCA7 /* PBXTextBookmark */;
-			136DF46110F27E00000DDCA7 = 136DF46110F27E00000DDCA7 /* PBXTextBookmark */;
+			136DF19A10F26B5C000DDCA7 /* PBXTextBookmark */ = 136DF19A10F26B5C000DDCA7 /* PBXTextBookmark */;
+			136DF19D10F26B5C000DDCA7 /* PBXTextBookmark */ = 136DF19D10F26B5C000DDCA7 /* PBXTextBookmark */;
+			136DF19E10F26B5C000DDCA7 /* PBXTextBookmark */ = 136DF19E10F26B5C000DDCA7 /* PBXTextBookmark */;
+			13EF550E10F3D4B80097FA6F /* PBXTextBookmark */ = 13EF550E10F3D4B80097FA6F /* PBXTextBookmark */;
+			13EF550F10F3D4B80097FA6F /* PBXTextBookmark */ = 13EF550F10F3D4B80097FA6F /* PBXTextBookmark */;
+			13EF551010F3D4B80097FA6F /* PBXTextBookmark */ = 13EF551010F3D4B80097FA6F /* PBXTextBookmark */;
+			13EF551110F3D4B80097FA6F /* PBXTextBookmark */ = 13EF551110F3D4B80097FA6F /* PBXTextBookmark */;
+			13EF551210F3D4B80097FA6F /* PBXTextBookmark */ = 13EF551210F3D4B80097FA6F /* PBXTextBookmark */;
 		};
 		sourceControlManager = 136DF16710F261C0000DDCA7 /* Source Control */;
 		userBuildSettings = {
@@ -80,16 +82,16 @@
 	};
 	136DF18A10F26A3A000DDCA7 /* SQLCipherManager.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {843, 1200}}";
+			sepNavIntBoundsRect = "{{0, 0}, {843, 1072}}";
 			sepNavSelRange = "{298, 0}";
-			sepNavVisRange = "{36, 613}";
+			sepNavVisRange = "{622, 1279}";
 		};
 	};
 	136DF18B10F26A3A000DDCA7 /* SQLCipherManager.m */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1132, 5248}}";
-			sepNavSelRange = "{5742, 77}";
-			sepNavVisRange = "{4685, 511}";
+			sepNavIntBoundsRect = "{{0, 0}, {1174, 5232}}";
+			sepNavSelRange = "{134, 0}";
+			sepNavVisRange = "{0, 1270}";
 			sepNavWindowFrame = "{{153, 47}, {1278, 700}}";
 		};
 	};
@@ -102,16 +104,6 @@
 		rType = 0;
 		vrLen = 174;
 		vrLoc = 0;
-	};
-	136DF19B10F26B5C000DDCA7 /* PBXTextBookmark */ = {
-		isa = PBXTextBookmark;
-		fRef = 136DF18B10F26A3A000DDCA7 /* SQLCipherManager.m */;
-		name = "SQLCipherManager.m: 156";
-		rLen = 77;
-		rLoc = 5742;
-		rType = 0;
-		vrLen = 1053;
-		vrLoc = 4586;
 	};
 	136DF19D10F26B5C000DDCA7 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
@@ -133,25 +125,55 @@
 		vrLen = 1053;
 		vrLoc = 4586;
 	};
-	136DF46010F27E00000DDCA7 /* PBXTextBookmark */ = {
+	13EF550E10F3D4B80097FA6F /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
-		fRef = 136DF18A10F26A3A000DDCA7 /* SQLCipherManager.h */;
-		name = "SQLCipherManager.h: 9";
+		fRef = 136DF18B10F26A3A000DDCA7 /* SQLCipherManager.m */;
+		name = "SQLCipherManager.m: 8";
 		rLen = 0;
-		rLoc = 168;
+		rLoc = 134;
 		rType = 0;
-		vrLen = 613;
-		vrLoc = 36;
+		vrLen = 1270;
+		vrLoc = 0;
 	};
-	136DF46110F27E00000DDCA7 /* PBXTextBookmark */ = {
+	13EF550F10F3D4B80097FA6F /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
 		fRef = 136DF18A10F26A3A000DDCA7 /* SQLCipherManager.h */;
 		name = "SQLCipherManager.h: 15";
 		rLen = 0;
 		rLoc = 298;
 		rType = 0;
-		vrLen = 613;
-		vrLoc = 36;
+		vrLen = 966;
+		vrLoc = 935;
+	};
+	13EF551010F3D4B80097FA6F /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 136DF18A10F26A3A000DDCA7 /* SQLCipherManager.h */;
+		name = "SQLCipherManager.h: 15";
+		rLen = 0;
+		rLoc = 298;
+		rType = 0;
+		vrLen = 966;
+		vrLoc = 935;
+	};
+	13EF551110F3D4B80097FA6F /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 136DF18B10F26A3A000DDCA7 /* SQLCipherManager.m */;
+		name = "SQLCipherManager.m: 8";
+		rLen = 0;
+		rLoc = 134;
+		rType = 0;
+		vrLen = 1270;
+		vrLoc = 0;
+	};
+	13EF551210F3D4B80097FA6F /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 136DF18A10F26A3A000DDCA7 /* SQLCipherManager.h */;
+		name = "SQLCipherManager.h: 15";
+		rLen = 0;
+		rLoc = 298;
+		rType = 0;
+		vrLen = 1279;
+		vrLoc = 622;
 	};
 	32DBCF5E0370ADEE00C91783 /* SQLCipherManager_Prefix.pch */ = {
 		uiCtxt = {

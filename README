@@ -1,0 +1,74 @@
+== SQLCipher Manager ==
+
+SQLCipher is an SQLite extension that provides transparent 256 bit AES encryption of database files.
+http://github.com/sjlombardo/sqlcipher
+
+SQLCipherManager is a class implementing a singleton object for accessing the database connection. Sounds fairly unnecessary until you consider that SQLCipher databases are protected by a key, the databases can be re-keyed, there are optional settings for key-derivation and AES cipher modes, and it's the kind of code you'd want to re-use in multiple programs.
+
+We needed a singleton object/class for our iPhone application using SQLCipher, and this implements a delegate protocol they can use to respond to interesting events. An application might be wired create an application-specific schema once the database is created, or it might be configured to check the schema version after the database is opened and do a migration if it's out of date.
+
+Usage example from our iPhone application Strip:
+
+    # pragma mark -
+    # pragma mark SQLCipherManagerDelegate
+
+    - (void)didOpenDatabase {
+    	NSLog(@"Database opened");
+    	SQLCipherManager *dm = [SQLCipherManager sharedManager];
+    	NSUInteger schemaVersion = [dm getSchemaVersion];
+    	if (schemaVersion != CONFIG_SCHEMAVERSION) {
+    		NSLog(@"handing off to schema manager, found old version %d", schemaVersion);
+    		StripSchemaManager *schemaManager = [[StripSchemaManager alloc] initWithSQLCipherManager:dm];
+    		[schemaManager migrate:CONFIG_SCHEMAVERSION];
+    		[schemaManager release];
+    	}
+    }
+
+    - (void)didCreateDatabase {
+    	NSLog(@"Database created, migrating");
+    	SQLCipherManager *dm = [SQLCipherManager sharedManager];
+    	StripSchemaManager *schemaManager = [[StripSchemaManager alloc] initWithSQLCipherManager:dm];
+    	[schemaManager migrate:CONFIG_SCHEMAVERSION];
+    }
+
+    - (void)didEncounterDatabaseError:(NSString *)error {
+    	NSLog(@"Database error! %@", error);
+    	SQLCipherManager *dm = [SQLCipherManager sharedManager];
+    	[dm closeDatabase];
+    	abort(); // ouch, yo, but it leaves us a crash log for later
+    }
+
+    - (void)didEncounterRekeyError {
+    	[self lockApplication];
+    	[self presentError:[NSError errorUsingDatabase:@"An error occured rekeying the database. Please login again using your original password" reason:@""]];
+    }
+
+Use of this software is governed by an MIT-style license.
+
+[License]
+
+Copyright (c) 2010, ZETETIC LLC
+All rights reserved.
+http://www.zetetic.net
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of the ZETETIC LLC nor the
+      names of its contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY ZETETIC LLC ''AS IS'' AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL ZETETIC LLC BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
