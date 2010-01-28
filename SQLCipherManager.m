@@ -19,6 +19,21 @@
 
 @synthesize database, inTransaction, delegate, cachedPassword, databasePath;
 
+- (NSNumber *)databaseSize {
+	if (!databasePath)
+		return nil;
+	
+	NSFileManager *fm = [NSFileManager defaultManager];
+	if (![fm fileExistsAtPath:databasePath])
+		return nil;
+	
+	NSError *error;
+	NSDictionary *attrs = [fm attributesOfItemAtPath:databasePath error:&error];
+	NSNumber *fileSize = (NSNumber *)[attrs objectForKey:@"NSFileSize"];
+	
+	return fileSize;
+}
+
 - (void)sendError:(NSString *)error {
 	if (self.delegate && [self.delegate respondsToSelector:@selector(didEncounterDatabaseError:)]) { 
         [self.delegate didEncounterDatabaseError:error];
@@ -308,6 +323,36 @@
 	
 	if(rc != SQLITE_OK) {
 		NSAssert1(0, @"Error setting user_version, '%s'", sqlite3_errmsg(database));
+	}
+}
+
+# pragma mark -
+# pragma mark Transaction / Query methods
+- (void)beginTransaction {
+	if(!inTransaction) {
+		[self execute:@"BEGIN;"];
+		inTransaction = YES;
+	}
+}
+
+- (void)commitTransaction {
+	if(inTransaction) {
+		[self execute:@"COMMIT;"];
+		inTransaction = NO;
+	}
+}
+
+- (void)rollbackTransaction {
+	if(inTransaction) {
+		[self execute:@"ROLLBACK;"];
+		inTransaction = NO;
+	}
+}
+
+- (void)execute:(NSString *)sqlCommand {
+	const char *sql = [sqlCommand UTF8String];
+	if (sqlite3_exec(database, sql, NULL, NULL, NULL) != SQLITE_OK) {
+		NSAssert1(0, @"Error executing command '%s'", sqlite3_errmsg(database));
 	}
 }
 
