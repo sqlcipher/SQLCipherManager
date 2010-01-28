@@ -66,6 +66,7 @@
 
 - (void)createDatabaseWithPassword:(NSString *)password {
 	if ([self openDatabaseWithOptions:password cipher:nil iterations:nil]) {
+		self.cachedPassword = password;
 		if (self.delegate && [self.delegate respondsToSelector:@selector(didCreateDatabase)]) {
 			NSLog(@"Calling delegate now that db has been created.");
 			[self.delegate didCreateDatabase];
