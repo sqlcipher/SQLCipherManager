@@ -40,6 +40,8 @@
 + (id)sharedManager;
 + (BOOL)passwordIsValid:(NSString *)password;
 
+- (NSNumber *)databaseSize;
+
 // Open, Close, and Re-Key methods
 - (void)createDatabaseWithPassword:(NSString *)password;
 - (BOOL)openDatabaseWithPassword:(NSString *)password;
@@ -61,6 +63,12 @@
 // Schema methods
 - (NSUInteger)getSchemaVersion;
 - (void)setSchemaVersion:(NSInteger)version;
+
+// Query / Transaction methods
+- (void)execute:(NSString *)sqlCommand;
+- (void)beginTransaction;
+- (void)commitTransaction;
+- (void)rollbackTransaction;
 
 @end
 
