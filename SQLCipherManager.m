@@ -91,7 +91,6 @@
 
 - (BOOL)openDatabaseWithPassword:(NSString *)password {
 	BOOL unlocked = NO;
-	
 	/* Code to handle conversion from on cipher and iteration count to another
 	 try first opening in the current CBC mode settings. If that fails, try with the CFB mode settings.
 	 if that works, then rekey to CBC */
@@ -113,7 +112,6 @@
 		// close db handle
 		[self closeDatabase];
 	}
-	
 	return unlocked;
 }
 
@@ -272,7 +270,13 @@
 }
 
 - (BOOL)restoreDatabaseFromRollback:(NSError **)error {
-	return [self restoreDatabaseFromFileAtPath:[self pathToRollbackDatabase] error:error];
+	BOOL success = [self restoreDatabaseFromFileAtPath:[self pathToRollbackDatabase] error:error];
+	if (success) {
+		// remove rollback file
+		NSFileManager *fm = [NSFileManager defaultManager];
+		[fm removeItemAtPath:[self pathToRollbackDatabase] error:error];
+	}
+	return success;
 }
 
 - (BOOL)restoreDatabaseFromFileAtPath:(NSString *)path error:(NSError **)error {
@@ -290,7 +294,7 @@
 	if ([fm removeItemAtPath:dbPath error:error]) {
 		// now move the backup to the original location
 		NSLog(@"moving the backup file into the primary database path...");
-		if ([fm moveItemAtPath:backupPath toPath:dbPath error:error]) {
+		if ([fm copyItemAtPath:backupPath toPath:dbPath error:error]) {
 			return YES;
 		}
 	}
