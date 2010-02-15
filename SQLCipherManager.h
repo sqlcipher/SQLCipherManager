@@ -50,6 +50,7 @@
 - (BOOL)rekeyDatabaseWithPassword:(NSString *)password;
 - (BOOL)rekeyDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSString *)iterations;
 - (void)closeDatabase;
+- (void)reallyCloseDatabase;
 - (BOOL)isDatabaseUnlocked;
 
 // Backup and File Location methods

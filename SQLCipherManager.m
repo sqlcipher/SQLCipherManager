@@ -239,6 +239,15 @@
 	database = nil;
 }
 
+- (void)reallyCloseDatabase {
+	if (sqlite3_close(database) == SQLITE_BUSY) {
+		// you're not too busy for us, buddy
+		sqlite3_interrupt(database);
+		sqlite3_close(database);
+	}
+	database = nil;
+}
+
 - (BOOL)isDatabaseUnlocked {
 	if (sqlite3_exec(database, "SELECT count(*) FROM sqlite_master;", NULL, NULL, NULL) == SQLITE_OK) {
 		return YES;

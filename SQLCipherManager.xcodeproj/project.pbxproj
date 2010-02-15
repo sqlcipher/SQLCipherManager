@@ -7,12 +7,47 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1322161711236CB900E2232C /* libsqlcipher.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1322161111236C7A00E2232C /* libsqlcipher.a */; };
 		136DF18C10F26A3A000DDCA7 /* SQLCipherManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 136DF18A10F26A3A000DDCA7 /* SQLCipherManager.h */; };
 		136DF18D10F26A3A000DDCA7 /* SQLCipherManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 136DF18B10F26A3A000DDCA7 /* SQLCipherManager.m */; };
+		13D346CD1124826E00294481 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 13D345DF1124727800294481 /* libcrypto.a */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		1322161011236C7A00E2232C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1322160511236C6E00E2232C /* sqlcipher.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = D2AAC046055464E500DB518D;
+			remoteInfo = sqlcipher;
+		};
+		1322161411236C9300E2232C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1322160511236C6E00E2232C /* sqlcipher.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = D2AAC045055464E500DB518D;
+			remoteInfo = sqlcipher;
+		};
+		13D345DE1124727800294481 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 132215EE11236C5000E2232C /* openssl.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 9069D28C0FCE659A0042E34C;
+			remoteInfo = crypto;
+		};
+		13D346C91124826900294481 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 132215EE11236C5000E2232C /* openssl.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 9069D28B0FCE659A0042E34C;
+			remoteInfo = crypto;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		0867D69BFE84028FC02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		132215EE11236C5000E2232C /* openssl.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = openssl.xcodeproj; path = "../openssl-staticbuild/openssl.xcodeproj"; sourceTree = OPENSSL_SRC; };
+		1322160511236C6E00E2232C /* sqlcipher.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = sqlcipher.xcodeproj; sourceTree = SQLCIPHER_SRC; };
 		136DF18A10F26A3A000DDCA7 /* SQLCipherManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SQLCipherManager.h; sourceTree = "<group>"; };
 		136DF18B10F26A3A000DDCA7 /* SQLCipherManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SQLCipherManager.m; sourceTree = "<group>"; };
 		32DBCF5E0370ADEE00C91783 /* SQLCipherManager_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SQLCipherManager_Prefix.pch; sourceTree = "<group>"; };
@@ -24,6 +59,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				13D346CD1124826E00294481 /* libcrypto.a in Frameworks */,
+				1322161711236CB900E2232C /* libsqlcipher.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -41,6 +78,8 @@
 		0867D691FE84028FC02AAC07 /* SQLCipherManager */ = {
 			isa = PBXGroup;
 			children = (
+				132215EE11236C5000E2232C /* openssl.xcodeproj */,
+				1322160511236C6E00E2232C /* sqlcipher.xcodeproj */,
 				08FB77AEFE84172EC02AAC07 /* Classes */,
 				32C88DFF0371C24200C91783 /* Other Sources */,
 				0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */,
@@ -82,6 +121,22 @@
 			name = "Other Frameworks";
 			sourceTree = "<group>";
 		};
+		1322160C11236C7A00E2232C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1322161111236C7A00E2232C /* libsqlcipher.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		13D345DA1124727800294481 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				13D345DF1124727800294481 /* libcrypto.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		32C88DFF0371C24200C91783 /* Other Sources */ = {
 			isa = PBXGroup;
 			children = (
@@ -115,6 +170,8 @@
 			buildRules = (
 			);
 			dependencies = (
+				1322161511236C9300E2232C /* PBXTargetDependency */,
+				13D346CA1124826900294481 /* PBXTargetDependency */,
 			);
 			name = SQLCipherManager;
 			productName = SQLCipherManager;
@@ -132,12 +189,39 @@
 			mainGroup = 0867D691FE84028FC02AAC07 /* SQLCipherManager */;
 			productRefGroup = 034768DFFF38A50411DB9C8B /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 13D345DA1124727800294481 /* Products */;
+					ProjectRef = 132215EE11236C5000E2232C /* openssl.xcodeproj */;
+				},
+				{
+					ProductGroup = 1322160C11236C7A00E2232C /* Products */;
+					ProjectRef = 1322160511236C6E00E2232C /* sqlcipher.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				D2AAC07D0554694100DB518D /* SQLCipherManager */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		1322161111236C7A00E2232C /* libsqlcipher.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libsqlcipher.a;
+			remoteRef = 1322161011236C7A00E2232C /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		13D345DF1124727800294481 /* libcrypto.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libcrypto.a;
+			remoteRef = 13D345DE1124727800294481 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXSourcesBuildPhase section */
 		D2AAC07B0554694100DB518D /* Sources */ = {
@@ -149,6 +233,19 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		1322161511236C9300E2232C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = sqlcipher;
+			targetProxy = 1322161411236C9300E2232C /* PBXContainerItemProxy */;
+		};
+		13D346CA1124826900294481 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = crypto;
+			targetProxy = 13D346C91124826900294481 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		1DEB921F08733DC00010E9CD /* Debug */ = {
@@ -163,6 +260,10 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = SQLCipherManager_Prefix.pch;
+				HEADER_SEARCH_PATHS = (
+					"$(OPENSSL_SRC)/**",
+					"$(SQLCIPHER_SRC)/**",
+				);
 				INSTALL_PATH = /usr/local/lib;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = SQLCipherManager;
@@ -178,6 +279,10 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = SQLCipherManager_Prefix.pch;
+				HEADER_SEARCH_PATHS = (
+					"$(OPENSSL_SRC)/**",
+					"$(SQLCIPHER_SRC)/**",
+				);
 				INSTALL_PATH = /usr/local/lib;
 				PRODUCT_NAME = SQLCipherManager;
 			};
