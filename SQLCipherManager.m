@@ -367,6 +367,11 @@
 - (void)execute:(NSString *)sqlCommand {
 	const char *sql = [sqlCommand UTF8String];
 	if (sqlite3_exec(database, sql, NULL, NULL, NULL) != SQLITE_OK) {
+		NSLog(@"SQL: %@", sqlCommand);
+		if (inTransaction) {
+			NSLog(@"ROLLBACK");
+			[self rollbackTransaction];
+		}
 		NSAssert1(0, @"Error executing command '%s'", sqlite3_errmsg(database));
 	}
 }
