@@ -10,7 +10,8 @@
 #import <sqlite3.h>
 
 #define ERR_SQLCIPHER_COMMAND_FAILED 1
-#define SQLCIPHER_DOMAIN @"SQLCipherDomain"
+NSString * const SQLCipherManagerErrorDomain;
+#define SQLCIPHER_DOMAIN @"SQLCipherManagerErrorDomain" 
 
 @class SQLCipherManager;
 
@@ -67,6 +68,7 @@
 
 // Query / Transaction methods
 - (void)execute:(NSString *)sqlCommand;
+- (BOOL)execute:(NSString *)sqlCommand error:(NSError **)error;
 - (void)beginTransaction;
 - (void)commitTransaction;
 - (void)rollbackTransaction;
