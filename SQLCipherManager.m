@@ -10,6 +10,8 @@
 
 #define kSQLCipherRollback @"rollback"
 
+NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
+
 @interface SQLCipherManager ()
 - (void)sendError:(NSString *)error;
 + (NSError *)errorUsingDatabase:(NSString *)problem reason:(NSString *)dbMessage;
@@ -46,7 +48,7 @@
 	NSArray *objsArray = [NSArray arrayWithObjects: problem, failureReason, nil];
 	NSArray *keysArray = [NSArray arrayWithObjects: NSLocalizedDescriptionKey, NSLocalizedFailureReasonErrorKey, nil];
 	NSDictionary *userInfo = [NSDictionary dictionaryWithObjects:objsArray forKeys:keysArray];
-	return [NSError errorWithDomain:SQLCIPHER_DOMAIN code:ERR_SQLCIPHER_COMMAND_FAILED userInfo:userInfo]; 
+	return [NSError errorWithDomain:SQLCipherManagerErrorDomain code:ERR_SQLCIPHER_COMMAND_FAILED userInfo:userInfo]; 
 }
 
 + (id)sharedManager
@@ -366,14 +368,37 @@
 
 - (void)execute:(NSString *)sqlCommand {
 	const char *sql = [sqlCommand UTF8String];
-	if (sqlite3_exec(database, sql, NULL, NULL, NULL) != SQLITE_OK) {
-		NSLog(@"SQL: %@", sqlCommand);
+	char *error;
+	if (sqlite3_exec(database, sql, NULL, NULL, &error) != SQLITE_OK) {
+		NSString *message = [NSString stringWithCString:error];
+		sqlite3_free(error);
+		NSLog(@"Error executing SQL: %@", sqlCommand);
+		NSLog(@"Error (cont): %@", message);
 		if (inTransaction) {
 			NSLog(@"ROLLBACK");
 			[self rollbackTransaction];
 		}
-		NSAssert1(0, @"Error executing command '%s'", sqlite3_errmsg(database));
+		NSAssert1(0, @"Error executing command '%@'", message);
 	}
+}
+
+- (BOOL)execute:(NSString *)sqlCommand error:(NSError **)error
+{
+	const char *sql = [sqlCommand UTF8String];
+	char *errorPointer;
+	if (sqlite3_exec(database, sql, NULL, NULL, &errorPointer) != SQLITE_OK)
+	{
+		if (error)
+		{
+			NSString *errMsg = [NSString stringWithCString:errorPointer];
+			NSString *description = @"An error occurred executing the SQL statement";
+			NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:description, NSLocalizedDescriptionKey, errMsg, NSLocalizedFailureReasonErrorKey, nil];
+			*error = [[NSError alloc] initWithDomain:SQLCipherManagerErrorDomain code:ERR_SQLCIPHER_COMMAND_FAILED userInfo:userInfo];
+			sqlite3_free(error);
+		}
+		return NO;
+	}
+	return YES;
 }
 
 # pragma mark -
