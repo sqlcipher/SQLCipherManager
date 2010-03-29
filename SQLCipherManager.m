@@ -63,6 +63,7 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 + (BOOL)passwordIsValid:(NSString *)password  {
 	if (password == nil)
 		return NO;
+	
 	// can't be blank a string, either
 	if ([[password stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]] length] <= 0)
 		return NO;
@@ -93,13 +94,20 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 
 - (BOOL)openDatabaseWithPassword:(NSString *)password {
 	BOOL unlocked = NO;
-	/* Code to handle conversion from on cipher and iteration count to another
+	/* Code to handle conversion from one cipher and iteration count to another
 	 try first opening in the current CBC mode settings. If that fails, try with the CFB mode settings.
 	 if that works, then rekey to CBC */
 	if (!(unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000"])) {
 		// try again in CFB mode
 		if((unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cfb" iterations:@"4000"])) {
+			// notify the delegate
+			if ([delegate respondsToSelector:@selector(sqlCipherManagerWillRekeyDatabase)])
+				[delegate sqlCipherManagerWillRekeyDatabase];
+			
 			unlocked = [self rekeyDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000"];
+			
+			if ([delegate respondsToSelector:@selector(sqlCipherManagerDidRekeyDatabase)])
+				[delegate sqlCipherManagerDidRekeyDatabase];
         }
 	}
 	
@@ -370,7 +378,7 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 	const char *sql = [sqlCommand UTF8String];
 	char *error;
 	if (sqlite3_exec(database, sql, NULL, NULL, &error) != SQLITE_OK) {
-		NSString *message = [NSString stringWithCString:error];
+		NSString *message = [NSString stringWithCString:error encoding:NSUTF8StringEncoding];
 		sqlite3_free(error);
 		NSLog(@"Error executing SQL: %@", sqlCommand);
 		NSLog(@"Error (cont): %@", message);
@@ -390,7 +398,7 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 	{
 		if (error)
 		{
-			NSString *errMsg = [NSString stringWithCString:errorPointer];
+			NSString *errMsg = [NSString stringWithCString:errorPointer encoding:NSUTF8StringEncoding];
 			NSString *description = @"An error occurred executing the SQL statement";
 			NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:description, NSLocalizedDescriptionKey, errMsg, NSLocalizedFailureReasonErrorKey, nil];
 			*error = [[NSError alloc] initWithDomain:SQLCipherManagerErrorDomain code:ERR_SQLCIPHER_COMMAND_FAILED userInfo:userInfo];

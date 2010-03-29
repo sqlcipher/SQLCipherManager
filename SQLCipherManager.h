@@ -21,6 +21,8 @@ NSString * const SQLCipherManagerErrorDomain;
 - (void)didCreateDatabase;
 - (void)didEncounterRekeyError;
 - (void)didEncounterDatabaseError:(NSString *)error;
+- (void)sqlCipherManagerWillRekeyDatabase;
+- (void)sqlCipherManagerDidRekeyDatabase;
 @end
 
 @interface SQLCipherManager : NSObject {
