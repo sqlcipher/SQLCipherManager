@@ -362,15 +362,23 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 
 - (void)commitTransaction {
 	if(inTransaction) {
-		[self execute:@"COMMIT;"];
-		inTransaction = NO;
+		NSError *error;
+		if ([self execute:@"COMMIT;" error:&error]) {
+			inTransaction = NO;
+		} else {
+			NSAssert1(0, @"Fatal database error executing COMMIT command: %@", error);
+		}
 	}
 }
 
 - (void)rollbackTransaction {
 	if(inTransaction) {
-		[self execute:@"ROLLBACK;"];
-		inTransaction = NO;
+		NSError *error;
+		if ([self execute:@"ROLLBACK;" error:&error]) {
+			inTransaction = NO;
+		} else {
+			NSAssert1(0, @"Fatal database error executing ROLLBACK command: %@", error);
+		}
 	}
 }
 
@@ -401,7 +409,7 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 			NSString *errMsg = [NSString stringWithCString:errorPointer encoding:NSUTF8StringEncoding];
 			NSString *description = @"An error occurred executing the SQL statement";
 			NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:description, NSLocalizedDescriptionKey, errMsg, NSLocalizedFailureReasonErrorKey, nil];
-			*error = [[NSError alloc] initWithDomain:SQLCipherManagerErrorDomain code:ERR_SQLCIPHER_COMMAND_FAILED userInfo:userInfo];
+			*error = [[[NSError alloc] initWithDomain:SQLCipherManagerErrorDomain code:ERR_SQLCIPHER_COMMAND_FAILED userInfo:userInfo] autorelease];
 			sqlite3_free(error);
 		}
 		return NO;
