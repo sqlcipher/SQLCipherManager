@@ -241,6 +241,11 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 		NSLog(@"error occurred rekeying database: %@, %@", [error localizedDescription], [error localizedFailureReason]);
 	}
 	
+	// if successful, update cached password
+	if (!failed) {
+		self.cachedPassword = password;
+	}
+	
 	return (failed) ? NO : YES;
 }
 
