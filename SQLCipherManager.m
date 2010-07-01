@@ -388,18 +388,19 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 }
 
 - (void)execute:(NSString *)sqlCommand {
-	const char *sql = [sqlCommand UTF8String];
-	char *error;
-	if (sqlite3_exec(database, sql, NULL, NULL, &error) != SQLITE_OK) {
-		NSString *message = [NSString stringWithCString:error encoding:NSUTF8StringEncoding];
-		sqlite3_free(error);
+	const char *sql = [sqlCommand UTF8String];	
+	int result = sqlite3_exec(database, sql, NULL, NULL, NULL);
+	
+	if (result != SQLITE_OK) {
 		NSLog(@"Error executing SQL: %@", sqlCommand);
-		NSLog(@"Error (cont): %@", message);
+		NSLog(@"sqlite3 errorcode: %d", sqlite3_errcode(database));
+		NSLog(@"sqlite3 errormsg: %s", sqlite3_errmsg(database));
 		if (inTransaction) {
 			NSLog(@"ROLLBACK");
 			[self rollbackTransaction];
 		}
-		NSAssert1(0, @"Error executing command '%@'", message);
+		// FIXM: throw an exception here, it's a programmer error if this happens
+		NSAssert1(0, @"Error executing command '%@'", sqlCommand);
 	}
 }
 

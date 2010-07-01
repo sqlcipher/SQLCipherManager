@@ -19,7 +19,7 @@
 			remoteGlobalIDString = D2AAC046055464E500DB518D;
 			remoteInfo = sqlcipher;
 		};
-		13D345DE1124727800294481 /* PBXContainerItemProxy */ = {
+		137BEACE11A42D740073EDB9 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 132215EE11236C5000E2232C /* openssl.xcodeproj */;
 			proxyType = 2;
@@ -30,7 +30,7 @@
 
 /* Begin PBXFileReference section */
 		0867D69BFE84028FC02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
-		132215EE11236C5000E2232C /* openssl.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = openssl.xcodeproj; path = "../openssl-staticbuild/openssl.xcodeproj"; sourceTree = OPENSSL_SRC; };
+		132215EE11236C5000E2232C /* openssl.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = openssl.xcodeproj; sourceTree = OPENSSL_SRC; };
 		1322160511236C6E00E2232C /* sqlcipher.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = sqlcipher.xcodeproj; sourceTree = SQLCIPHER_SRC; };
 		136DF18A10F26A3A000DDCA7 /* SQLCipherManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SQLCipherManager.h; sourceTree = "<group>"; };
 		136DF18B10F26A3A000DDCA7 /* SQLCipherManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SQLCipherManager.m; sourceTree = "<group>"; };
@@ -111,10 +111,10 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		13D345DA1124727800294481 /* Products */ = {
+		137BEACA11A42D740073EDB9 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				13D345DF1124727800294481 /* libcrypto.a */,
+				137BEACF11A42D740073EDB9 /* libcrypto.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -171,7 +171,7 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 13D345DA1124727800294481 /* Products */;
+					ProductGroup = 137BEACA11A42D740073EDB9 /* Products */;
 					ProjectRef = 132215EE11236C5000E2232C /* openssl.xcodeproj */;
 				},
 				{
@@ -194,11 +194,11 @@
 			remoteRef = 1322161011236C7A00E2232C /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		13D345DF1124727800294481 /* libcrypto.a */ = {
+		137BEACF11A42D740073EDB9 /* libcrypto.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libcrypto.a;
-			remoteRef = 13D345DE1124727800294481 /* PBXContainerItemProxy */;
+			remoteRef = 137BEACE11A42D740073EDB9 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
