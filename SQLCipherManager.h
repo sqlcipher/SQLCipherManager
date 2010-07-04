@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <sqlite3.h>
+#include "sqlite3.h"
 
 #define ERR_SQLCIPHER_COMMAND_FAILED 1
 
