@@ -10,8 +10,6 @@
 #import <sqlite3.h>
 
 #define ERR_SQLCIPHER_COMMAND_FAILED 1
-NSString * const SQLCipherManagerErrorDomain;
-#define SQLCIPHER_DOMAIN @"SQLCipherManagerErrorDomain" 
 
 @class SQLCipherManager;
 
