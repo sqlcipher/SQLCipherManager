@@ -53,7 +53,7 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 
 + (id)sharedManager
 {
-	// TODO: Wouldn't this cause the manager to get nil'd out every time we call sharedManager?
+	// static var is initialized at compile time
 	static SQLCipherManager *sharedManager = nil;
 	
 	if(!sharedManager)
