@@ -72,6 +72,7 @@
 - (void)beginTransaction;
 - (void)commitTransaction;
 - (void)rollbackTransaction;
+- (NSString *)getScalarWith:(NSString *)query;
 
 @end
 
