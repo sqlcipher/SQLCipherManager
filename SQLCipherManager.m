@@ -54,6 +54,7 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 + (id)sharedManager
 {
 	// TODO: Wouldn't this cause the manager to get nil'd out every time we call sharedManager?
+	// Answer: no. static. etc. 
 	static SQLCipherManager *sharedManager = nil;
 	
 	if(!sharedManager)
@@ -458,7 +459,6 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 		memset((void *)[cachedPassword UTF8String], 0, [cachedPassword length]);
 	}
 	[cachedPassword release];
-	[delegate release];
 	[super dealloc];
 }
 
