@@ -400,7 +400,7 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 			NSLog(@"ROLLBACK");
 			[self rollbackTransaction];
 		}
-		// FIXM: throw an exception here, it's a programmer error if this happens
+		// FIXME: throw an exception here, it's a programmer error if this happens
 		NSAssert1(0, @"Error executing command '%@'", sqlCommand);
 	}
 }
@@ -424,6 +424,32 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 	return YES;
 }
 
+- (NSString *)getScalarWith:(NSString*)query {
+	sqlite3_stmt *stmt;
+	NSString *scalar;
+	if (sqlite3_prepare_v2(database, [query UTF8String], -1, &stmt, NULL) == SQLITE_OK) {
+		if (sqlite3_step(stmt) == SQLITE_ROW) {
+			const unsigned char * cValue;
+			cValue = sqlite3_column_text(stmt, 0);
+			if (cValue) {
+				scalar = [NSString stringWithUTF8String:(char *) cValue];
+			}
+		} 
+	} else {
+		NSLog(@"Error executing SQL: %@", query);
+		NSLog(@"sqlite3 errorcode: %d", sqlite3_errcode(database));
+		NSLog(@"sqlite3 errormsg: %s", sqlite3_errmsg(database));
+		if (inTransaction) {
+			NSLog(@"ROLLBACK");
+			[self rollbackTransaction];
+		}
+		// FIXME: throw an exception here, it's a programmer error if this happens
+		NSAssert1(0, @"Error executing command '%@'", query);
+	}
+	sqlite3_finalize(stmt);
+	return scalar;
+}
+
 # pragma mark -
 # pragma mark Dealloc!
 - (void)dealloc {
@@ -432,7 +458,6 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 		memset((void *)[cachedPassword UTF8String], 0, [cachedPassword length]);
 	}
 	[cachedPassword release];
-	[delegate release];
 	[super dealloc];
 }
 
