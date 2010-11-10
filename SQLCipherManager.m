@@ -339,6 +339,7 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 
 - (BOOL)createReplicaAtPath:(NSString *)path
 {
+	NSLog(@"createReplicaAtPath: %@", path);
 	BOOL success = NO;
 	sqlite3 *replica = nil;
 	if (sqlite3_open([path UTF8String], &replica) == SQLITE_OK) {
@@ -348,10 +349,12 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 		// do a quick check to make sure it took
 		if (sqlite3_exec(replica, "SELECT count(*) FROM sqlite_master;", NULL, NULL, NULL) == SQLITE_OK) {
 			success = YES;
-			
-			
 		}
 	}
+	else {
+		NSAssert1(0, @"Failed to create replica '%s'", sqlite3_errmsg(replica));
+	}
+
 	return success;
 }
 

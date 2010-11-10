@@ -38,7 +38,9 @@
 @property (nonatomic, retain) NSString *cachedPassword;
 @property (nonatomic, retain) NSString *databasePath;
 
+- (id)initWithPath:(NSString *)path;
 + (id)sharedManager;
+
 + (BOOL)passwordIsValid:(NSString *)password;
 
 - (NSNumber *)databaseSize;
