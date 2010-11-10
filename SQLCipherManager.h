@@ -61,6 +61,7 @@
 - (NSString *)pathToRollbackDatabase;
 - (BOOL)restoreDatabaseFromRollback:(NSError **)error;
 - (BOOL)restoreDatabaseFromFileAtPath:(NSString *)path error:(NSError **)error;
+- (BOOL)createReplicaAtPath:(NSString *)path;
 
 // Schema methods
 - (NSUInteger)getSchemaVersion;
