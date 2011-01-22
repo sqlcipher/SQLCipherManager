@@ -11,27 +11,8 @@
 		136DF18D10F26A3A000DDCA7 /* SQLCipherManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 136DF18B10F26A3A000DDCA7 /* SQLCipherManager.m */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		1322161011236C7A00E2232C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 1322160511236C6E00E2232C /* sqlcipher.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = D2AAC046055464E500DB518D;
-			remoteInfo = sqlcipher;
-		};
-		137BEACE11A42D740073EDB9 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 132215EE11236C5000E2232C /* openssl.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 9069D28C0FCE659A0042E34C;
-			remoteInfo = crypto;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXFileReference section */
 		0867D69BFE84028FC02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
-		132215EE11236C5000E2232C /* openssl.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = openssl.xcodeproj; sourceTree = OPENSSL_SRC; };
-		1322160511236C6E00E2232C /* sqlcipher.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = sqlcipher.xcodeproj; sourceTree = SQLCIPHER_SRC; };
 		136DF18A10F26A3A000DDCA7 /* SQLCipherManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SQLCipherManager.h; sourceTree = "<group>"; };
 		136DF18B10F26A3A000DDCA7 /* SQLCipherManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SQLCipherManager.m; sourceTree = "<group>"; };
 		32DBCF5E0370ADEE00C91783 /* SQLCipherManager_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SQLCipherManager_Prefix.pch; sourceTree = "<group>"; };
@@ -60,8 +41,6 @@
 		0867D691FE84028FC02AAC07 /* SQLCipherManager */ = {
 			isa = PBXGroup;
 			children = (
-				132215EE11236C5000E2232C /* openssl.xcodeproj */,
-				1322160511236C6E00E2232C /* sqlcipher.xcodeproj */,
 				08FB77AEFE84172EC02AAC07 /* Classes */,
 				32C88DFF0371C24200C91783 /* Other Sources */,
 				0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */,
@@ -101,22 +80,6 @@
 			children = (
 			);
 			name = "Other Frameworks";
-			sourceTree = "<group>";
-		};
-		1322160C11236C7A00E2232C /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				1322161111236C7A00E2232C /* libsqlcipher.a */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		137BEACA11A42D740073EDB9 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				137BEACF11A42D740073EDB9 /* libcrypto.a */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 		32C88DFF0371C24200C91783 /* Other Sources */ = {
@@ -165,43 +128,23 @@
 			isa = PBXProject;
 			buildConfigurationList = 1DEB922208733DC00010E9CD /* Build configuration list for PBXProject "SQLCipherManager" */;
 			compatibilityVersion = "Xcode 3.1";
+			developmentRegion = English;
 			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+			);
 			mainGroup = 0867D691FE84028FC02AAC07 /* SQLCipherManager */;
 			productRefGroup = 034768DFFF38A50411DB9C8B /* Products */;
 			projectDirPath = "";
-			projectReferences = (
-				{
-					ProductGroup = 137BEACA11A42D740073EDB9 /* Products */;
-					ProjectRef = 132215EE11236C5000E2232C /* openssl.xcodeproj */;
-				},
-				{
-					ProductGroup = 1322160C11236C7A00E2232C /* Products */;
-					ProjectRef = 1322160511236C6E00E2232C /* sqlcipher.xcodeproj */;
-				},
-			);
 			projectRoot = "";
 			targets = (
 				D2AAC07D0554694100DB518D /* SQLCipherManager */,
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXReferenceProxy section */
-		1322161111236C7A00E2232C /* libsqlcipher.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libsqlcipher.a;
-			remoteRef = 1322161011236C7A00E2232C /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		137BEACF11A42D740073EDB9 /* libcrypto.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libcrypto.a;
-			remoteRef = 137BEACE11A42D740073EDB9 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-/* End PBXReferenceProxy section */
 
 /* Begin PBXSourcesBuildPhase section */
 		D2AAC07B0554694100DB518D /* Sources */ = {
