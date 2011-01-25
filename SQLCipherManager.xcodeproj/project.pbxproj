@@ -171,11 +171,16 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = SQLCipherManager_Prefix.pch;
 				HEADER_SEARCH_PATHS = (
+					"../sqlcipher/**",
 					"$(OPENSSL_SRC)/**",
-					"$(SQLCIPHER_SRC)/**",
 				);
 				INSTALL_PATH = /usr/local/lib;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = (
+					"-DSQLITE_HAS_CODEC",
+					"-DNDEBUG",
+					"-DSQLITE_TEMP_STORE=2",
+				);
 				PRODUCT_NAME = SQLCipherManager;
 			};
 			name = Debug;
@@ -190,10 +195,15 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = SQLCipherManager_Prefix.pch;
 				HEADER_SEARCH_PATHS = (
+					"../sqlcipher/**",
 					"$(OPENSSL_SRC)/**",
-					"$(SQLCIPHER_SRC)/**",
 				);
 				INSTALL_PATH = /usr/local/lib;
+				OTHER_CFLAGS = (
+					"-DSQLITE_HAS_CODEC",
+					"-DNDEBUG",
+					"-DSQLITE_TEMP_STORE=2",
+				);
 				PRODUCT_NAME = SQLCipherManager;
 			};
 			name = Release;
