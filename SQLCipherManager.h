@@ -73,6 +73,8 @@
 - (void)commitTransaction;
 - (void)rollbackTransaction;
 - (NSString *)getScalarWith:(NSString *)query;
+- (NSInteger)countForSQL:(NSString *)countSQL;
+- (NSInteger)countForTable:(NSString *)tableName;
 
 @end
 
