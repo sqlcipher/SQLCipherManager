@@ -38,7 +38,9 @@
 @property (nonatomic, retain) NSString *cachedPassword;
 @property (nonatomic, retain) NSString *databasePath;
 
+- (id)initWithPath:(NSString *)path;
 + (id)sharedManager;
+
 + (BOOL)passwordIsValid:(NSString *)password;
 
 - (NSNumber *)databaseSize;
@@ -61,6 +63,7 @@
 - (NSString *)pathToRollbackDatabase;
 - (BOOL)restoreDatabaseFromRollback:(NSError **)error;
 - (BOOL)restoreDatabaseFromFileAtPath:(NSString *)path error:(NSError **)error;
+- (BOOL)createReplicaAtPath:(NSString *)path;
 
 // Schema methods
 - (NSUInteger)getSchemaVersion;
