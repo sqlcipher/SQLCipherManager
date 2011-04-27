@@ -96,7 +96,7 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 	if ([self openDatabaseWithOptions:password cipher:nil iterations:nil]) {
 		self.cachedPassword = password;
 		if (self.delegate && [self.delegate respondsToSelector:@selector(didCreateDatabase)]) {
-			NSLog(@"Calling delegate now that db has been created.");
+			DLog(@"Calling delegate now that db has been created.");
 			[self.delegate didCreateDatabase];
 		}
 	}
@@ -124,7 +124,7 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 	// if unlocked, check to see if there's any needed schema updates
 	if(unlocked) {
 		self.cachedPassword = password;
-		NSLog(@"Calling delegate now that DB is open.");
+		DLog(@"Calling delegate now that DB is open.");
 		if (self.delegate && [self.delegate respondsToSelector:@selector(didOpenDatabase)]) { 
 			[self.delegate didOpenDatabase];
 		}
@@ -167,16 +167,16 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 
 - (BOOL)rekeyDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSString *)iterations {	
 	// 1. backup current db file
-	NSLog(@"creating a copy of the current database");
+	DLog(@"creating a copy of the current database");
 	NSFileManager *fm = [NSFileManager defaultManager];
 	NSString *dstPath = [self pathToRollbackDatabase];
 	NSError *error = NULL;
 	
 	if ([fm fileExistsAtPath:dstPath]) {
-		NSLog(@"backup file already exists, removing...");
+		DLog(@"backup file already exists, removing...");
 		BOOL removed = [fm removeItemAtPath:dstPath error:&error];
 		if (removed == NO) {
-			NSLog(@"unable to remove old version of backup database: %@, %@", [error localizedDescription], [error localizedFailureReason]);
+			DLog(@"unable to remove old version of backup database: %@, %@", [error localizedDescription], [error localizedFailureReason]);
 			return NO;
 		}
 	}
@@ -192,7 +192,7 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 	
 	// 2.a rekey cipher
 	if (cipher) {
-		NSLog(@"attempting to rekey cipher");
+		DLog(@"attempting to rekey cipher");
 		if (sqlite3_exec(database, (const char*)[[NSString stringWithFormat:@"PRAGMA rekey_cipher='%@';", cipher] UTF8String], NULL, NULL, NULL) != SQLITE_OK) {
 			failed = YES;
 			// setup the error object
@@ -203,7 +203,7 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 	
 	// 2.b rekey kdf_iter
 	if (failed == NO && iterations) {
-		NSLog(@"attempting to rekey kdf_iter");
+		DLog(@"attempting to rekey kdf_iter");
 		if (sqlite3_exec(database, (const char*)[[NSString stringWithFormat:@"PRAGMA rekey_kdf_iter='%@';", iterations] UTF8String], NULL, NULL, NULL) != SQLITE_OK) {
 			failed = YES;
 			// setup the error object
@@ -213,7 +213,7 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 	}
 	
 	if (failed == NO && password) {
-		NSLog(@"attempting to rekey password");
+		DLog(@"attempting to rekey password");
 		const char* new_key = [(NSString *)password UTF8String];
 		if (sqlite3_rekey(database, new_key, strlen(new_key)) != SQLITE_OK) {
 			failed = YES;
@@ -232,7 +232,7 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 	
 	// if there were no failures...
 	if (failed == NO) {
-		NSLog(@"rekey tested successfully, removing backup file %@", dstPath);
+		DLog(@"rekey tested successfully, removing backup file %@", dstPath);
 		// 3.a. remove backup db file, return YES
 		[fm removeItemAtPath:dstPath error:&error];
 	} else { // ah, but there were failures...
@@ -325,10 +325,10 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 	NSAssert1([fm fileExistsAtPath:backupPath], @"no backup db file at %@", backupPath);
 	
 	// remove the original to make way for the backup
-	NSLog(@"removing the file at the primary database path...");
+	DLog(@"removing the file at the primary database path...");
 	if ([fm removeItemAtPath:dbPath error:error]) {
 		// now move the backup to the original location
-		NSLog(@"moving the backup file into the primary database path...");
+		DLog(@"moving the backup file into the primary database path...");
 		if ([fm copyItemAtPath:backupPath toPath:dbPath error:error]) {
 			return YES;
 		}
@@ -338,7 +338,7 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 
 - (BOOL)createReplicaAtPath:(NSString *)path
 {
-	NSLog(@"createReplicaAtPath: %@", path);
+	DLog(@"createReplicaAtPath: %@", path);
 	BOOL success = NO;
 	sqlite3 *replica = nil;
 	if (sqlite3_open([path UTF8String], &replica) == SQLITE_OK) {
@@ -423,11 +423,11 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 	int result = sqlite3_exec(database, sql, NULL, NULL, NULL);
 	
 	if (result != SQLITE_OK) {
-		NSLog(@"Error executing SQL: %@", sqlCommand);
-		NSLog(@"sqlite3 errorcode: %d", sqlite3_errcode(database));
-		NSLog(@"sqlite3 errormsg: %s", sqlite3_errmsg(database));
+		DLog(@"Error executing SQL: %@", sqlCommand);
+		DLog(@"sqlite3 errorcode: %d", sqlite3_errcode(database));
+		DLog(@"sqlite3 errormsg: %s", sqlite3_errmsg(database));
 		if (inTransaction) {
-			NSLog(@"ROLLBACK");
+			DLog(@"ROLLBACK");
 			[self rollbackTransaction];
 		}
 		// FIXME: throw an exception here, it's a programmer error if this happens
@@ -466,9 +466,9 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 			}
 		} 
 	} else {
-		NSLog(@"Error executing SQL: %@", query);
-		NSLog(@"sqlite3 errorcode: %d", sqlite3_errcode(database));
-		NSLog(@"sqlite3 errormsg: %s", sqlite3_errmsg(database));
+		DLog(@"Error executing SQL: %@", query);
+		DLog(@"sqlite3 errorcode: %d", sqlite3_errcode(database));
+		DLog(@"sqlite3 errormsg: %s", sqlite3_errmsg(database));
 		if (inTransaction) {
 			NSLog(@"ROLLBACK");
 			[self rollbackTransaction];
