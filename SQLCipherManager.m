@@ -19,28 +19,43 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 
 @implementation SQLCipherManager
 
-@synthesize database, inTransaction, delegate, cachedPassword, databasePath;
+@synthesize database, inTransaction, delegate, cachedPassword;
+@synthesize databaseUrl=_databaseUrl;
+@dynamic databasePath;
+
+- (id)initWithURL:(NSURL *)absoluteUrl
+{
+    self = [self init];
+    if (self)
+    {
+        _databaseUrl = [absoluteUrl retain];
+    }
+    return self;
+}
 
 - (id)initWithPath:(NSString *)path
 {
-	if (self = [self init])
-	{
-		databasePath = [path retain];
-	}
-	return self;
+	NSURL *absoluteUrl = [NSURL URLWithString:path];
+    return [self initWithURL:absoluteUrl];
+}
+
+- (void)setDatabasePath:(NSString *)databasePath
+{
+    [self setDatabaseUrl:[NSURL URLWithString:databasePath]];
+}
+
+- (NSString *)databasePath
+{
+    return [[self databaseUrl] absoluteString];
 }
 
 - (NSNumber *)databaseSize {
-	if (!databasePath)
+	if (!_databaseUrl)
 		return nil;
-	
-	NSFileManager *fm = [NSFileManager defaultManager];
-	if (![fm fileExistsAtPath:databasePath])
-		return nil;
-	
-	NSError *error;
-	NSDictionary *attrs = [fm attributesOfItemAtPath:databasePath error:&error];
-	NSNumber *fileSize = (NSNumber *)[attrs objectForKey:@"NSFileSize"];
+    
+    NSArray *array = [NSArray arrayWithObject:NSURLFileSizeKey];
+    NSDictionary *attrs = [_databaseUrl resourceValuesForKeys:array error:NULL];
+    NSNumber *fileSize = (NSNumber *)[attrs objectForKey:NSURLFileSizeKey];
 	
 	return fileSize;
 }
@@ -285,9 +300,8 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 # pragma mark Backup and file location methods
 
 - (NSString *)databaseDirectory {
-	NSAssert(databasePath != nil, @"Property databasePath may not be nil!");
 	// pass back the parent directory of the user-specified databasePath
-	return [databasePath stringByDeletingLastPathComponent];
+	return [[self databasePath] stringByDeletingLastPathComponent];
 }
 
 - (BOOL)databaseExists {
@@ -296,12 +310,11 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 }
 
 - (NSString *)pathToDatabase {
-	NSAssert(databasePath != nil, @"Property databasePath may not be nil!");
-	return databasePath;
+	return [self databasePath];
 }
 
 - (NSString *)pathToRollbackDatabase {
-	return [databasePath stringByAppendingPathExtension:kSQLCipherRollback];
+	return [[self databasePath] stringByAppendingPathExtension:kSQLCipherRollback];
 }
 
 - (BOOL)restoreDatabaseFromRollback:(NSError **)error {
@@ -501,7 +514,7 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 # pragma mark -
 # pragma mark Dealloc!
 - (void)dealloc {
-	[databasePath release];
+    [_databaseUrl release];
 	if(cachedPassword) {
 		memset((void *)[cachedPassword UTF8String], 0, [cachedPassword length]);
 	}
