@@ -41,12 +41,12 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 
 - (void)setDatabasePath:(NSString *)databasePath
 {
-    [self setDatabaseUrl:[NSURL URLWithString:databasePath]];
+    [self setDatabaseUrl:[NSURL fileURLWithPath:databasePath]];
 }
 
 - (NSString *)databasePath
 {
-    return [[self databaseUrl] absoluteString];
+    return [[self databaseUrl] path];
 }
 
 - (NSNumber *)databaseSize {
@@ -305,8 +305,10 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 }
 
 - (BOOL)databaseExists {
-	NSFileManager *fm = [NSFileManager defaultManager];
-	return [fm fileExistsAtPath:[self pathToDatabase]];
+    NSError *error;
+    BOOL exists = [[self databaseUrl] checkResourceIsReachableAndReturnError:&error];
+    DLog(@"database DNE, error: %@", error);
+    return exists;
 }
 
 - (NSString *)pathToDatabase {
