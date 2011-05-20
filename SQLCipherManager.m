@@ -305,9 +305,16 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 }
 
 - (BOOL)databaseExists {
+    BOOL exists = NO;
+#if !defined(TARGET_OS_IPHONE)
+    // this method isn't available on iOS (derp?)
     NSError *error;
-    BOOL exists = [[self databaseUrl] checkResourceIsReachableAndReturnError:&error];
+    exists = [[self databaseUrl] checkResourceIsReachableAndReturnError:&error];
     DLog(@"database DNE, error: %@", error);
+#else
+    NSFileManager *fm = [NSFileManager defaultManager];
+    exists = [fm fileExistsAtPath:[[self databaseUrl] path]];
+#endif
     return exists;
 }
 
