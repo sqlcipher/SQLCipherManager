@@ -155,6 +155,10 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 		}
 		
 		unlocked = [self isDatabaseUnlocked];
+        if (!unlocked)
+        {
+            sqlite3_close(database);
+        }
 	} else {
 		NSAssert1(0, @"Unable to open database file '%s'", sqlite3_errmsg(database));
 	}
