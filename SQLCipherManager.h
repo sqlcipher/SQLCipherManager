@@ -28,7 +28,8 @@
 	BOOL inTransaction;
 	id delegate;
 	NSString *cachedPassword;
-	NSString *databasePath;
+@private
+    NSURL *_databaseUrl;
 }
 
 @property (nonatomic) sqlite3 *database;
@@ -37,8 +38,10 @@
 
 @property (nonatomic, retain) NSString *cachedPassword;
 @property (nonatomic, retain) NSString *databasePath;
+@property (nonatomic, retain) NSURL *databaseUrl;
 
-- (id)initWithPath:(NSString *)path;
+- (id)initWithURL:(NSURL *)absoluteUrl;
+- (id)initWithPath:(NSString *)path; // DEPRECATED
 + (id)sharedManager;
 
 + (BOOL)passwordIsValid:(NSString *)password;
