@@ -35,13 +35,15 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 
 - (id)initWithPath:(NSString *)path
 {
-	NSURL *absoluteUrl = [NSURL URLWithString:path];
-    return [self initWithURL:absoluteUrl];
+    NSURL *absoluteURL = [[[NSURL alloc] initFileURLWithPath:path isDirectory:NO] autorelease];
+    return [self initWithURL:absoluteURL];
 }
 
 - (void)setDatabasePath:(NSString *)databasePath
 {
-    [self setDatabaseUrl:[NSURL fileURLWithPath:databasePath]];
+    NSURL *url = [[NSURL alloc] initFileURLWithPath:databasePath isDirectory:NO];
+    [self setDatabaseUrl:url];
+    [url release];
 }
 
 - (NSString *)databasePath
