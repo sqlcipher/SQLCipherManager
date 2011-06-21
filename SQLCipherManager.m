@@ -312,7 +312,7 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 
 - (BOOL)databaseExists {
     BOOL exists = NO;
-#if !defined(TARGET_OS_IPHONE)
+#if !TARGET_OS_IPHONE
     // this method isn't available on iOS (derp?)
     NSError *error;
     exists = [[self databaseUrl] checkResourceIsReachableAndReturnError:&error];
