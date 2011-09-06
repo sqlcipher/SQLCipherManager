@@ -54,11 +54,17 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 - (NSNumber *)databaseSize {
 	if (!_databaseUrl)
 		return nil;
-    
+#if TARGET_OS_IPHONE
+    NSError *error;
+    NSFileManager *fm = [NSFileManager defaultManager];
+    NSDictionary *attrs = [fm attributesOfItemAtPath:[self databasePath] error:&error];
+    unsigned long long size = [attrs fileSize];
+    NSNumber *fileSize = [NSNumber numberWithUnsignedLongLong: size];
+#else
     NSArray *array = [NSArray arrayWithObject:NSURLFileSizeKey];
     NSDictionary *attrs = [_databaseUrl resourceValuesForKeys:array error:NULL];
     NSNumber *fileSize = (NSNumber *)[attrs objectForKey:NSURLFileSizeKey];
-	
+#endif
 	return fileSize;
 }
 
@@ -312,8 +318,8 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 
 - (BOOL)databaseExists {
     BOOL exists = NO;
-#if !defined(TARGET_OS_IPHONE)
-    // this method isn't available on iOS (derp?)
+#if !TARGET_OS_IPHONE
+    // this method just returns YES in iOS, is not implemented
     NSError *error;
     exists = [[self databaseUrl] checkResourceIsReachableAndReturnError:&error];
     DLog(@"database DNE, error: %@", error);
