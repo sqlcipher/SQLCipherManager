@@ -173,8 +173,8 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = SQLCipherManager_Prefix.pch;
 				HEADER_SEARCH_PATHS = (
-					"../sqlcipher/**",
-					"$(OPENSSL_SRC)/**",
+					../sqlcipher,
+					"$(OPENSSL_SRC)/include",
 				);
 				INSTALL_PATH = /usr/local/lib;
 				OTHER_CFLAGS = (
@@ -195,8 +195,8 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = SQLCipherManager_Prefix.pch;
 				HEADER_SEARCH_PATHS = (
-					"../sqlcipher/**",
-					"$(OPENSSL_SRC)/**",
+					../sqlcipher,
+					"$(OPENSSL_SRC)/include",
 				);
 				INSTALL_PATH = /usr/local/lib;
 				OTHER_CFLAGS = (
@@ -211,12 +211,14 @@
 		1DEB922308733DC00010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				"ARCHS[sdk=iphoneos*]" = (
 					armv6,
 					armv7,
 				);
-				"ARCHS[sdk=macosx*]" = "$(ARCHS_STANDARD_32_64_BIT)";
+				"ARCHS[sdk=macosx*]" = (
+					x86_64,
+					i386,
+				);
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
@@ -232,12 +234,14 @@
 		1DEB922408733DC00010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				"ARCHS[sdk=iphoneos*]" = (
 					armv6,
 					armv7,
 				);
-				"ARCHS[sdk=macosx*]" = "$(ARCHS_STANDARD_32_64_BIT)";
+				"ARCHS[sdk=macosx*]" = (
+					x86_64,
+					i386,
+				);
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
