@@ -453,20 +453,12 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 }
 
 - (void)execute:(NSString *)sqlCommand {
-	const char *sql = [sqlCommand UTF8String];	
-	int result = sqlite3_exec(database, sql, NULL, NULL, NULL);
-	
-	if (result != SQLITE_OK) {
-		DLog(@"Error executing SQL: %@", sqlCommand);
-		DLog(@"sqlite3 errorcode: %d", sqlite3_errcode(database));
-		DLog(@"sqlite3 errormsg: %s", sqlite3_errmsg(database));
-		if (inTransaction) {
-			DLog(@"ROLLBACK");
-			[self rollbackTransaction];
-		}
-		// FIXME: throw an exception here, it's a programmer error if this happens
-		NSAssert1(0, @"Error executing command '%@'", sqlCommand);
-	}
+    NSError *error;
+    if ([self execute:sqlCommand error:&error] != YES) 
+    {
+        // fixme: do a real throw, NSAssert gets squashed in Release
+        NSAssert2(0, @"Error executing command '%@', error: %@", sqlCommand, error);
+    }
 }
 
 - (BOOL)execute:(NSString *)sqlCommand error:(NSError **)error
@@ -481,7 +473,7 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 			NSString *description = @"An error occurred executing the SQL statement";
 			NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:description, NSLocalizedDescriptionKey, errMsg, NSLocalizedFailureReasonErrorKey, nil];
 			*error = [[[NSError alloc] initWithDomain:SQLCipherManagerErrorDomain code:ERR_SQLCIPHER_COMMAND_FAILED userInfo:userInfo] autorelease];
-			sqlite3_free(error);
+			sqlite3_free(errorPointer);
 		}
 		return NO;
 	}
