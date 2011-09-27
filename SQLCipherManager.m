@@ -287,12 +287,15 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 }
 
 - (void)closeDatabase {
+    DLog(@"Closing database");
 	sqlite3_close(database);
 	database = nil;
 }
 
 - (void)reallyCloseDatabase {
+    DLog(@"Closing database and checking for SQLITE_BUSY");
 	if (sqlite3_close(database) == SQLITE_BUSY) {
+        NSLog(@"Warning, database is busy, attempting to interrupt and close...");
 		// you're not too busy for us, buddy
 		sqlite3_interrupt(database);
 		sqlite3_close(database);
