@@ -14,6 +14,7 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 
 @interface SQLCipherManager ()
 - (void)sendError:(NSString *)error;
++ (NSError *)errorWithSQLitePointer:(char *)errorPointer;
 + (NSError *)errorUsingDatabase:(NSString *)problem reason:(NSString *)dbMessage;
 @end
 
@@ -72,6 +73,17 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 	if (self.delegate && [self.delegate respondsToSelector:@selector(didEncounterDatabaseError:)]) { 
         [self.delegate didEncounterDatabaseError:error];
     }
+}
+
++ (NSError *)errorWithSQLitePointer:(char *)errorPointer
+{
+    NSString *errMsg = [NSString stringWithCString:errorPointer encoding:NSUTF8StringEncoding];
+    NSString *description = @"An error occurred executing a SQL statement";
+    NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:description, NSLocalizedDescriptionKey, errMsg, NSLocalizedFailureReasonErrorKey, nil];
+    return [[[NSError alloc] initWithDomain:SQLCipherManagerErrorDomain 
+                                       code:ERR_SQLCIPHER_COMMAND_FAILED 
+                                   userInfo:userInfo] 
+            autorelease];
 }
 
 + (NSError *)errorUsingDatabase:(NSString *)problem reason:(NSString *)dbMessage
@@ -472,10 +484,7 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 	{
 		if (error)
 		{
-			NSString *errMsg = [NSString stringWithCString:errorPointer encoding:NSUTF8StringEncoding];
-			NSString *description = @"An error occurred executing the SQL statement";
-			NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:description, NSLocalizedDescriptionKey, errMsg, NSLocalizedFailureReasonErrorKey, nil];
-			*error = [[[NSError alloc] initWithDomain:SQLCipherManagerErrorDomain code:ERR_SQLCIPHER_COMMAND_FAILED userInfo:userInfo] autorelease];
+            *error = [[self class] errorWithSQLitePointer:errorPointer];
 			sqlite3_free(errorPointer);
 		}
 		return NO;
