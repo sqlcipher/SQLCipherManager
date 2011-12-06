@@ -11,6 +11,7 @@
 #define kSQLCipherRollback @"rollback"
 
 NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
+NSString * const SQLCipherManagerCommandException = @"SQLCipherManagerCommandException";
 
 @interface SQLCipherManager ()
 - (void)sendError:(NSString *)error;
@@ -471,8 +472,8 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
     NSError *error;
     if ([self execute:sqlCommand error:&error] != YES) 
     {
-        // fixme: do a real throw, NSAssert gets squashed in Release
-        NSAssert2(0, @"Error executing command '%@', error: %@", sqlCommand, error);
+        NSException *e = [NSException exceptionWithName:SQLCipherManagerCommandException reason:[error localizedFailureReason] userInfo:[error userInfo]];
+        @throw e;
     }
 }
 
