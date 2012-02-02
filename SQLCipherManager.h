@@ -30,6 +30,7 @@ extern NSString * const SQLCipherManagerCommandException;
 	BOOL inTransaction;
 	id delegate;
 	NSString *cachedPassword;
+    BOOL _useHMACPageProtection;
 @private
     NSURL *_databaseUrl;
 }
@@ -41,6 +42,8 @@ extern NSString * const SQLCipherManagerCommandException;
 @property (nonatomic, retain) NSString *cachedPassword;
 @property (nonatomic, retain) NSString *databasePath;
 @property (nonatomic, retain) NSURL *databaseUrl;
+
+@property (nonatomic) BOOL useHMACPageProtection;
 
 - (id)initWithURL:(NSURL *)absoluteUrl;
 - (id)initWithPath:(NSString *)path; // DEPRECATED

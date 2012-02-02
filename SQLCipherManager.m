@@ -24,13 +24,15 @@ NSString * const SQLCipherManagerCommandException = @"SQLCipherManagerCommandExc
 @synthesize database, inTransaction, delegate, cachedPassword;
 @synthesize databaseUrl=_databaseUrl;
 @dynamic databasePath;
+@synthesize useHMACPageProtection=_useHMACPageProtection;
 
 - (id)initWithURL:(NSURL *)absoluteUrl
 {
     self = [self init];
     if (self)
     {
-        _databaseUrl = [absoluteUrl retain];
+        _databaseUrl            = [absoluteUrl retain];
+        _useHMACPageProtection  = YES;
     }
     return self;
 }
@@ -171,34 +173,39 @@ NSString * const SQLCipherManagerCommandException = @"SQLCipherManagerCommandExc
 	return unlocked;
 }
 
-- (BOOL) openDatabaseWithCachedPassword {
+- (BOOL)openDatabaseWithCachedPassword {
 	return [self openDatabaseWithPassword:self.cachedPassword];
 }
 
 - (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSString *)iterations {
-	BOOL unlocked = NO;
-	if (sqlite3_open([[self pathToDatabase] UTF8String], &database) == SQLITE_OK) {
-		// submit the password
-		const char *key = [password UTF8String];
-		sqlite3_key(database, key, strlen(key));
-		
-		if(cipher) {
-			sqlite3_exec(database, (const char*)[[NSString stringWithFormat:@"PRAGMA cipher='%@';", cipher] UTF8String], NULL, NULL, NULL);			
-		}
-		
-		if(iterations) {
-			sqlite3_exec(database, (const char*)[[NSString stringWithFormat:@"PRAGMA kdf_iter='%@';", iterations] UTF8String], NULL, NULL, NULL);	
-		}
-		
-		unlocked = [self isDatabaseUnlocked];
-        if (!unlocked)
-        {
+    BOOL unlocked = NO;
+    if (sqlite3_open([[self pathToDatabase] UTF8String], &database) == SQLITE_OK) {
+        // submit the password
+        const char *key = [password UTF8String];
+        sqlite3_key(database, key, strlen(key));
+        
+        // make sure to turn off HMAC now if the application doesn't want it (e.g. isn't ready for SQLCipher 2.0)
+        if (_useHMACPageProtection == NO) {
+            DLog(@"HMAC page protection has been disabled");
+            [self execute:@"PRAGMA cipher_use_hmac = OFF;"];
+        }
+
+        if (cipher) {
+            [self execute:[NSString stringWithFormat:@"PRAGMA cipher='%@';", cipher]];
+        }
+
+        if (iterations) {
+            [self execute:[NSString stringWithFormat:@"PRAGMA kdf_iter='%@';", iterations]];
+        }
+
+        unlocked = [self isDatabaseUnlocked];
+        if (!unlocked) {
             sqlite3_close(database);
         }
-	} else {
-		NSAssert1(0, @"Unable to open database file '%s'", sqlite3_errmsg(database));
-	}
-	return unlocked;
+    } else {
+        NSAssert1(0, @"Unable to open database file '%s'", sqlite3_errmsg(database));
+    }
+    return unlocked;
 }
 
 - (BOOL)rekeyDatabaseWithPassword:(NSString *)password {
