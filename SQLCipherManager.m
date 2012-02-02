@@ -409,31 +409,15 @@ NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 #pragma mark -
 #pragma mark Schema methods
 
-- (NSUInteger) getSchemaVersion {
-	int version = -1;
-	const char *sql = "PRAGMA user_version;";
-	sqlite3_stmt *stmt;
-	if(sqlite3_prepare_v2(database, sql, -1, &stmt, NULL) == SQLITE_OK) {
-		if (sqlite3_step(stmt) == SQLITE_ROW) {
-			version = sqlite3_column_int(stmt, 0);
-		} else {
-			version = 0;
-		}
-	} else {
-		NSAssert1(0, @"Failed preparing statement to check user_version '%s'", sqlite3_errmsg(database));
-	}
-	sqlite3_finalize(stmt);
-	return version;
+- (NSInteger)getSchemaVersion {
+    NSString *scalar = [self getScalarWith:@"PRAGMA user_version;"];
+    return [scalar integerValue];
 }
 
-- (void) setSchemaVersion:(NSInteger)newVersion {
+- (void)setSchemaVersion:(NSInteger)newVersion {
 	NSAssert1(newVersion >= 0, @"New version %d is less than zero, only signed integers allowed", newVersion);
-	NSString *sql = [NSString stringWithFormat:@"PRAGMA user_version = '%d';", newVersion];
-	int rc = sqlite3_exec(database, (const char*) [sql UTF8String], NULL, NULL, NULL);
-	
-	if(rc != SQLITE_OK) {
-		NSAssert1(0, @"Error setting user_version, '%s'", sqlite3_errmsg(database));
-	}
+    NSString *sql = [NSString stringWithFormat:@"PRAGMA user_version = '%d';", newVersion];
+    [self execute:sql];
 }
 
 # pragma mark -

@@ -69,7 +69,7 @@
 - (BOOL)createReplicaAtPath:(NSString *)path;
 
 // Schema methods
-- (NSUInteger)getSchemaVersion;
+- (NSInteger)getSchemaVersion;
 - (void)setSchemaVersion:(NSInteger)version;
 
 // Query / Transaction methods
