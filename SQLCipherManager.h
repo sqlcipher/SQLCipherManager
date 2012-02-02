@@ -11,6 +11,8 @@
 
 #define ERR_SQLCIPHER_COMMAND_FAILED 1
 
+extern NSString * const SQLCipherManagerCommandException;
+
 @class SQLCipherManager;
 
 @protocol SQLCipherManagerDelegate <NSObject>
@@ -73,7 +75,7 @@
 - (void)setSchemaVersion:(NSInteger)version;
 
 // Query / Transaction methods
-- (void)execute:(NSString *)sqlCommand;
+- (void)execute:(NSString *)sqlCommand; // throws an NSException on command failure
 - (BOOL)execute:(NSString *)sqlCommand error:(NSError **)error;
 - (void)beginTransaction;
 - (void)commitTransaction;
