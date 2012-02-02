@@ -187,15 +187,15 @@ NSString * const SQLCipherManagerCommandException = @"SQLCipherManagerCommandExc
         // make sure to turn off HMAC now if the application doesn't want it (e.g. isn't ready for SQLCipher 2.0)
         if (_useHMACPageProtection == NO) {
             DLog(@"HMAC page protection has been disabled");
-            [self execute:@"PRAGMA cipher_use_hmac = OFF;"];
+            [self execute:@"PRAGMA cipher_use_hmac = OFF;" error:NULL];
         }
 
         if (cipher) {
-            [self execute:[NSString stringWithFormat:@"PRAGMA cipher='%@';", cipher]];
+            [self execute:[NSString stringWithFormat:@"PRAGMA cipher='%@';", cipher] error:NULL];
         }
 
         if (iterations) {
-            [self execute:[NSString stringWithFormat:@"PRAGMA kdf_iter='%@';", iterations]];
+            [self execute:[NSString stringWithFormat:@"PRAGMA kdf_iter='%@';", iterations] error:NULL];
         }
 
         unlocked = [self isDatabaseUnlocked];
