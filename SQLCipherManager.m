@@ -187,7 +187,7 @@ NSString * const SQLCipherManagerCommandException = @"SQLCipherManagerCommandExc
         // make sure to turn off HMAC now if the application doesn't want it (e.g. isn't ready for SQLCipher 2.0)
         if (_useHMACPageProtection == NO) {
             DLog(@"HMAC page protection has been disabled");
-            [self execute:@"PRAGMA cipher_use_hmac = OFF;" error:NULL];
+            [self execute:@"PRAGMA cipher_default_use_hmac = OFF;" error:NULL];
         }
 
         if (cipher) {
