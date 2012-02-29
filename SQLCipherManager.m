@@ -180,15 +180,15 @@ NSString * const SQLCipherManagerCommandException = @"SQLCipherManagerCommandExc
 - (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSString *)iterations {
     BOOL unlocked = NO;
     if (sqlite3_open([[self pathToDatabase] UTF8String], &database) == SQLITE_OK) {
-        // submit the password
-        const char *key = [password UTF8String];
-        sqlite3_key(database, key, strlen(key));
-        
         // make sure to turn off HMAC now if the application doesn't want it (e.g. isn't ready for SQLCipher 2.0)
         if (_useHMACPageProtection == NO) {
             DLog(@"HMAC page protection has been disabled");
             [self execute:@"PRAGMA cipher_default_use_hmac = OFF;" error:NULL];
         }
+        
+        // submit the password
+        const char *key = [password UTF8String];
+        sqlite3_key(database, key, strlen(key));
 
         if (cipher) {
             [self execute:[NSString stringWithFormat:@"PRAGMA cipher='%@';", cipher] error:NULL];
