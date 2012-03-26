@@ -12,6 +12,7 @@
 
 NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 NSString * const SQLCipherManagerCommandException = @"SQLCipherManagerCommandException";
+NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQueryKey";
 
 @interface SQLCipherManager ()
 - (void)sendError:(NSString *)error;
@@ -496,15 +497,19 @@ NSString * const SQLCipherManagerCommandException = @"SQLCipherManagerCommandExc
 			}
 		} 
 	} else {
-		DLog(@"Error executing SQL: %@", query);
-		DLog(@"sqlite3 errorcode: %d", sqlite3_errcode(database));
-		DLog(@"sqlite3 errormsg: %s", sqlite3_errmsg(database));
-		if (inTransaction) {
+        DLog(@"Error executing SQL: %@", query);
+        NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+        [dict setObject:query forKey:SQLCipherManagerUserInfoQueryKey];
+        NSString *errorString = [NSString stringWithFormat:@"SQLite error %d: %s", sqlite3_errcode(database), sqlite3_errmsg(database)];
+        DLog(errorString);
+        
+        if (inTransaction) {
 			NSLog(@"ROLLBACK");
 			[self rollbackTransaction];
 		}
-		// FIXME: throw an exception here, it's a programmer error if this happens
-		NSAssert1(0, @"Error executing command '%@'", query);
+        
+        NSException *e = [NSException exceptionWithName:SQLCipherManagerCommandException reason:errorString userInfo:dict];
+        @throw e;
 	}
 	sqlite3_finalize(stmt);
 	return scalar;

@@ -12,6 +12,7 @@
 #define ERR_SQLCIPHER_COMMAND_FAILED 1
 
 extern NSString * const SQLCipherManagerCommandException;
+extern NSString * const SQLCipherManagerUserInfoQueryKey;
 
 @class SQLCipherManager;
 
