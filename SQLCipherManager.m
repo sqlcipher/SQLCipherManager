@@ -488,8 +488,11 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 - (NSString *)getScalarWith:(NSString*)query {
 	sqlite3_stmt *stmt;
 	NSString *scalar;
-	if (sqlite3_prepare_v2(database, [query UTF8String], -1, &stmt, NULL) == SQLITE_OK) {
-		if (sqlite3_step(stmt) == SQLITE_ROW) {
+    int rc = 0;
+    rc = sqlite3_prepare_v2(database, [query UTF8String], -1, &stmt, NULL);
+	if (rc == SQLITE_OK) {
+        rc = sqlite3_step(stmt); 
+		if (rc == SQLITE_ROW) {
 			const unsigned char * cValue;
 			cValue = sqlite3_column_text(stmt, 0);
 			if (cValue) {
