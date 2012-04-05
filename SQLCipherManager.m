@@ -28,13 +28,20 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 @dynamic databasePath;
 @synthesize useHMACPageProtection=_useHMACPageProtection;
 
+- (id)init {
+    self = [super init];
+    if (self) {
+        _useHMACPageProtection = NO;
+    }
+    return self;
+}
+
 - (id)initWithURL:(NSURL *)absoluteUrl
 {
     self = [self init];
     if (self)
     {
-        _databaseUrl            = [absoluteUrl retain];
-        _useHMACPageProtection  = YES;
+        _databaseUrl = [absoluteUrl retain];
     }
     return self;
 }
