@@ -300,6 +300,18 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
                                                    reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
         }
 	}
+    
+    // DETACH rekey database
+    if (failed == NO) {
+        sql = @"DETACH DATABASE rekey;";
+        rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, NULL);
+        if (rc != SQLITE_OK) {
+            failed = YES;
+            // setup the error object
+			*error = [SQLCipherManager errorUsingDatabase:@"Unable to detach rekey database" 
+                                                   reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+        }
+    }
 	
     // move the new db into place
 	if (failed == NO) {
@@ -310,8 +322,8 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
         if (![self restoreDatabaseFromFileAtPath:[self pathToRekeyDatabase] error:error]) {
             failed = YES;
         }
-        // test that our new db works!
-        if (![self openDatabaseWithOptions:password cipher:cipher iterations:iterations]) {
+        // test that our new db works
+        if (!([self openDatabaseWithOptions:password cipher:cipher iterations:iterations] && [self isDatabaseUnlocked])) {
             failed = YES;
             *error = [SQLCipherManager errorUsingDatabase:@"Unable to open database after moving rekey into place" 
                                                    reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
@@ -320,7 +332,7 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 	
 	// if there were no failures...
 	if (failed == NO) {
-		DLog(@"rekey tested successfully, removing backup file %@", dstPath);
+		DLog(@"rekey tested successfully, removing backup file %@", [self pathToRollbackDatabase]);
 		// 3.a. remove backup db file, return YES
 		[fm removeItemAtPath:[self pathToRollbackDatabase] error:error];
 	} else { // ah, but there were failures...
@@ -569,7 +581,7 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
         NSMutableDictionary *dict = [NSMutableDictionary dictionary];
         [dict setObject:query forKey:SQLCipherManagerUserInfoQueryKey];
         NSString *errorString = [NSString stringWithFormat:@"SQLite error %d: %s", sqlite3_errcode(database), sqlite3_errmsg(database)];
-        DLog(errorString);
+        DLog(@"%@", errorString);
         
         if (inTransaction) {
 			NSLog(@"ROLLBACK");
