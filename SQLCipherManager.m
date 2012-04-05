@@ -31,7 +31,7 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 - (id)init {
     self = [super init];
     if (self) {
-        _useHMACPageProtection = NO;
+        _useHMACPageProtection = YES;
     }
     return self;
 }
