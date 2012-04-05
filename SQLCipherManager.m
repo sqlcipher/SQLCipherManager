@@ -148,7 +148,8 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
     // open with CBC, 10,000 iterations
     DLog(@"attempting to open in CBC mode, with 10,000 iterations");
     if (!(unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"10000"])) {
-        // if that doesn't work, try previous settings and re-key
+        // if that doesn't work, *turn off HMAC* (legacy DBs have no HMAC page protection) and try legacy settings
+        [self execute:@"PRAGMA cipher_use_hmac = OFF;" error:NULL];
         DLog(@"attempting to open in CBC mode, with 4,000 iterations");
         if ((unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000"])) {
             DLog(@"initiating re-key to new settings");
