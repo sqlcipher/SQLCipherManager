@@ -179,7 +179,6 @@
 				INSTALL_PATH = /usr/local/lib;
 				OTHER_CFLAGS = (
 					"-DSQLITE_HAS_CODEC",
-					"-DNDEBUG",
 					"-DSQLITE_TEMP_STORE=2",
 				);
 				PRODUCT_NAME = SQLCipherManager;
