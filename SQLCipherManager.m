@@ -299,6 +299,15 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 			*error = [SQLCipherManager errorUsingDatabase:@"Unable to copy data to rekey database" 
                                                    reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
         }
+        // we need to update the user version, too
+        sql = [NSString stringWithFormat:@"PRAGMA rekey.user_version = %@", [self getSchemaVersion]];
+        rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, NULL);
+        if (rc != SQLITE_OK) {
+            failed = YES;
+            // setup the error object
+			*error = [SQLCipherManager errorUsingDatabase:@"Unable to set user version" 
+                                                   reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+        }
 	}
     
     // DETACH rekey database
@@ -316,7 +325,7 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
     // move the new db into place
 	if (failed == NO) {
         // close our current handle to the original db
-		[self closeDatabase];
+		[self reallyCloseDatabase];
         
         // move the rekey db into place
         if (![self restoreDatabaseFromFileAtPath:[self pathToRekeyDatabase] error:error]) {
