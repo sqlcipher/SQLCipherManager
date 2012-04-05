@@ -300,7 +300,8 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
                                                    reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
         }
         // we need to update the user version, too
-        sql = [NSString stringWithFormat:@"PRAGMA rekey.user_version = %@", [self getSchemaVersion]];
+        NSInteger version = [self getSchemaVersion];
+        sql = [NSString stringWithFormat:@"PRAGMA rekey.user_version = %d", version];
         rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, NULL);
         if (rc != SQLITE_OK) {
             failed = YES;
