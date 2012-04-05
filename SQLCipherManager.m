@@ -153,7 +153,7 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
         if ((unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000"])) {
             DLog(@"initiating re-key to new settings");
             unlocked = [self rekeyDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"10000" error:&error];
-            if (error != nil) {
+            if (!unlocked && error) {
                 DLog(@"error re-keying database: %@", error);
             }
         }
@@ -163,7 +163,7 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
             if ((unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cfb" iterations:@"4000"])) {
                 DLog(@"initiating re-key to new settings");
                 unlocked = [self rekeyDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"10000" error:&error];
-                if (error != nil) {
+                if (!unlocked && error) {
                     DLog(@"error re-keying database: %@", error);
                 }
             }
