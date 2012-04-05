@@ -60,7 +60,10 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 - (BOOL)openDatabaseWithCachedPassword;
 - (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSString *)iterations;
 - (BOOL)rekeyDatabaseWithPassword:(NSString *)password;
-- (BOOL)rekeyDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSString *)iterations;
+- (BOOL)rekeyDatabaseWithOptions:(NSString*)password 
+                          cipher:(NSString*)cipher 
+                      iterations:(NSString *)iterations 
+                           error:(NSError **)error;
 - (void)closeDatabase;
 - (void)reallyCloseDatabase;
 - (BOOL)isDatabaseUnlocked;
@@ -70,9 +73,12 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 - (BOOL)databaseExists;
 - (NSString *)pathToDatabase;
 - (NSString *)pathToRollbackDatabase;
+- (NSString *)pathToRekeyDatabase;
 - (BOOL)restoreDatabaseFromRollback:(NSError **)error;
 - (BOOL)restoreDatabaseFromFileAtPath:(NSString *)path error:(NSError **)error;
 - (BOOL)createReplicaAtPath:(NSString *)path;
+- (BOOL)createRollbackDatabase:(NSError **)error;
+- (BOOL)copyDatabaseToPath:(NSString *)path error:(NSError **)error;
 
 // Schema methods
 - (NSInteger)getSchemaVersion;

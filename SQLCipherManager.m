@@ -9,6 +9,7 @@
 #import "SQLCipherManager.h"
 
 #define kSQLCipherRollback @"rollback"
+#define kSQLCipherRekey @"rekey"
 
 NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 NSString * const SQLCipherManagerCommandException = @"SQLCipherManagerCommandException";
@@ -132,7 +133,7 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 # pragma mark Open, Create, Re-Key and Close Tasks
 
 - (void)createDatabaseWithPassword:(NSString *)password {
-	if ([self openDatabaseWithOptions:password cipher:nil iterations:nil]) {
+	if ([self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"10000"]) {
 		self.cachedPassword = password;
 		if (self.delegate && [self.delegate respondsToSelector:@selector(didCreateDatabase)]) {
 			DLog(@"Calling delegate now that db has been created.");
@@ -143,22 +144,31 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 
 - (BOOL)openDatabaseWithPassword:(NSString *)password {
 	BOOL unlocked = NO;
-	/* Code to handle conversion from one cipher and iteration count to another
-	 try first opening in the current CBC mode settings. If that fails, try with the CFB mode settings.
-	 if that works, then rekey to CBC */
-	if (!(unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000"])) {
-		// try again in CFB mode
-		if((unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cfb" iterations:@"4000"])) {
-			// notify the delegate
-			if ([delegate respondsToSelector:@selector(sqlCipherManagerWillRekeyDatabase)])
-				[delegate sqlCipherManagerWillRekeyDatabase];
-			
-			unlocked = [self rekeyDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000"];
-			
-			if ([delegate respondsToSelector:@selector(sqlCipherManagerDidRekeyDatabase)])
-				[delegate sqlCipherManagerDidRekeyDatabase];
+    NSError *error;
+    // open with CBC, 10,000 iterations
+    DLog(@"attempting to open in CBC mode, with 10,000 iterations");
+    if (!(unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"10000"])) {
+        // if that doesn't work, try previous settings and re-key
+        DLog(@"attempting to open in CBC mode, with 4,000 iterations");
+        if ((unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000"])) {
+            DLog(@"initiating re-key to new settings");
+            unlocked = [self rekeyDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"10000" error:&error];
+            if (error != nil) {
+                DLog(@"error re-keying database: %@", error);
+            }
         }
-	}
+        else {
+            // try the original settings, CFB, 4,000 iterations, and re-key
+            DLog(@"attempting to open in CFB mode, with 4,000 iterations");
+            if ((unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cfb" iterations:@"4000"])) {
+                DLog(@"initiating re-key to new settings");
+                unlocked = [self rekeyDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"10000" error:&error];
+                if (error != nil) {
+                    DLog(@"error re-keying database: %@", error);
+                }
+            }
+        }
+    }
 	
 	// if unlocked, check to see if there's any needed schema updates
 	if(unlocked) {
@@ -210,99 +220,127 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 }
 
 - (BOOL)rekeyDatabaseWithPassword:(NSString *)password {
-	return [self rekeyDatabaseWithOptions:password cipher:nil iterations:nil];
+	return [self rekeyDatabaseWithOptions:password cipher:nil iterations:nil error:NULL];
 }
 
-- (BOOL)rekeyDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSString *)iterations {	
+- (BOOL)rekeyDatabaseWithOptions:(NSString*)password 
+                          cipher:(NSString*)cipher 
+                      iterations:(NSString *)iterations 
+                           error:(NSError **)error 
+{	
+    if (delegate && [delegate respondsToSelector:@selector(sqlCipherManagerWillRekeyDatabase)])
+        [delegate sqlCipherManagerWillRekeyDatabase];
+    
+    NSFileManager *fm = [NSFileManager defaultManager];
+    BOOL failed = NO; // used to track whether any sqlcipher operations have yet failed
+    
 	// 1. backup current db file
-	DLog(@"creating a copy of the current database");
-	NSFileManager *fm = [NSFileManager defaultManager];
-	NSString *dstPath = [self pathToRollbackDatabase];
-	NSError *error = NULL;
-	
-	if ([fm fileExistsAtPath:dstPath]) {
-		DLog(@"backup file already exists, removing...");
-		BOOL removed = [fm removeItemAtPath:dstPath error:&error];
-		if (removed == NO) {
-			DLog(@"unable to remove old version of backup database: %@, %@", [error localizedDescription], [error localizedFailureReason]);
-			return NO;
-		}
-	}
-	BOOL copied = [fm copyItemAtPath:[self pathToDatabase] toPath:dstPath error:&error];
-	if (copied == NO) {		
-		NSLog(@"could not copy database to backup path %@, aborting", dstPath);
+    BOOL copied = [self createRollbackDatabase:error];
+    if (copied == NO) {		
+		NSLog(@"could not create rollback database aborting");
 		// halt immediatly, can't create a backup
 		return NO;
 	}
 	
-	// 2. Initiate the various rekeys
-	BOOL failed = NO; // used to track whether any sqlcipher operations have yet failed
-	
+	// 2. Attach a re-key database
+    NSString *sql = nil;
+    // Provide new KEY to ATTACH if not nil
+    if (password != nil) {
+        sql = [NSString stringWithFormat:@"ATTACH DATABASE '%@' AS rekey KEY '%@';", 
+               [self pathToRekeyDatabase], 
+               password];
+    }
+    else {
+        // The current key will be used by ATTACH
+        sql = [NSString stringWithFormat:@"ATTACH DATABASE '%@' AS rekey;", [self pathToRekeyDatabase]];
+    }
+    int rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, NULL);
+    if (rc != SQLITE_OK) {
+        failed = YES;
+        // setup the error object
+        *error = [SQLCipherManager errorUsingDatabase:@"Unable to attach rekey database" 
+                                               reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+    }
+    
 	// 2.a rekey cipher
-	if (cipher) {
-		DLog(@"attempting to rekey cipher");
-		if (sqlite3_exec(database, (const char*)[[NSString stringWithFormat:@"PRAGMA rekey_cipher='%@';", cipher] UTF8String], NULL, NULL, NULL) != SQLITE_OK) {
+	if (cipher != nil) {
+		DLog(@"setting new cipher: %@", cipher);
+        sql = [NSString stringWithFormat:@"PRAGMA rekey.cipher='%@';", cipher];
+        rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, NULL);
+		if (rc != SQLITE_OK) {
 			failed = YES;
 			// setup the error object
-			error = [SQLCipherManager errorUsingDatabase:@"Unable to change database cipher" 
+			*error = [SQLCipherManager errorUsingDatabase:@"Unable to set rekey.cipher" 
 										 reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
 		}
 	}
 	
 	// 2.b rekey kdf_iter
-	if (failed == NO && iterations) {
-		DLog(@"attempting to rekey kdf_iter");
-		if (sqlite3_exec(database, (const char*)[[NSString stringWithFormat:@"PRAGMA rekey_kdf_iter='%@';", iterations] UTF8String], NULL, NULL, NULL) != SQLITE_OK) {
+	if (failed == NO && iterations != nil) {
+		DLog(@"setting new kdf_iter: %@", iterations);
+        sql = [NSString stringWithFormat:@"PRAGMA rekey.kdf_iter='%@';", iterations];
+        rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, NULL);
+		if (rc != SQLITE_OK) {
 			failed = YES;
 			// setup the error object
-			error = [SQLCipherManager errorUsingDatabase:@"Unable to change database KDF iteration setting"
+			*error = [SQLCipherManager errorUsingDatabase:@"Unable to set rekey.kdf_iter"
 										 reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
 		}
 	}
 	
+    // sqlcipher_export
 	if (failed == NO && password) {
-		DLog(@"attempting to rekey password");
-		const char* new_key = [(NSString *)password UTF8String];
-		if (sqlite3_rekey(database, new_key, strlen(new_key)) != SQLITE_OK) {
-			failed = YES;
-			// setup the error object
-			error = [SQLCipherManager errorUsingDatabase:@"Unable to change database the database password"
-										 reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
-		}
+		DLog(@"exporting schema and data to rekey database");
+		sql = @"SELECT sqlcipher_export('rekey');";
+        rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, NULL);
+        if (rc != SQLITE_OK) {
+            failed = YES;
+            // setup the error object
+			*error = [SQLCipherManager errorUsingDatabase:@"Unable to copy data to rekey database" 
+                                                   reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+        }
 	}
 	
+    // move the new db into place
 	if (failed == NO) {
-		[self closeDatabase]; // close down the database, flush page cache, etc
-		if(![self openDatabaseWithOptions:password cipher:cipher iterations:iterations]) {
-			failed = YES;
-		}
+        // close our current handle to the original db
+		[self closeDatabase];
+        
+        // move the rekey db into place
+        if (![self restoreDatabaseFromFileAtPath:[self pathToRekeyDatabase] error:error]) {
+            failed = YES;
+        }
+        // test that our new db works!
+        if (![self openDatabaseWithOptions:password cipher:cipher iterations:iterations]) {
+            failed = YES;
+            *error = [SQLCipherManager errorUsingDatabase:@"Unable to open database after moving rekey into place" 
+                                                   reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+        }
 	}
 	
 	// if there were no failures...
 	if (failed == NO) {
 		DLog(@"rekey tested successfully, removing backup file %@", dstPath);
 		// 3.a. remove backup db file, return YES
-		[fm removeItemAtPath:dstPath error:&error];
+		[fm removeItemAtPath:[self pathToRollbackDatabase] error:error];
 	} else { // ah, but there were failures...
 		// 3.b. close db, replace file with backup
 		NSLog(@"rekey test failed, restoring db from backup");
 		[self closeDatabase];
-		if (![self restoreDatabaseFromRollback:&error]) {
+		if (![self restoreDatabaseFromRollback:error]) {
 			NSLog(@"Unable to restore database from backup file");
 		}
-		
 		// now this presents an interesting situation... need to let the application/delegate handle this, really
 		[delegate didEncounterRekeyError];		
-	}
-	
-	if(error) { // log any errors out to console for us to deal with on support basis
-		NSLog(@"error occurred rekeying database: %@, %@", [error localizedDescription], [error localizedFailureReason]);
 	}
 	
 	// if successful, update cached password
 	if (!failed) {
 		self.cachedPassword = password;
 	}
+    
+    if (delegate && [delegate respondsToSelector:@selector(sqlCipherManagerDidRekeyDatabase)])
+        [delegate sqlCipherManagerDidRekeyDatabase];
 	
 	return (failed) ? NO : YES;
 }
@@ -362,6 +400,10 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 	return [[self databasePath] stringByAppendingPathExtension:kSQLCipherRollback];
 }
 
+- (NSString *)pathToRekeyDatabase {
+    return [[self databasePath] stringByAppendingPathExtension:kSQLCipherRekey];
+}
+
 - (BOOL)restoreDatabaseFromRollback:(NSError **)error {
 	BOOL success = [self restoreDatabaseFromFileAtPath:[self pathToRollbackDatabase] error:error];
 	if (success) {
@@ -413,6 +455,29 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 	}
 
 	return success;
+}
+
+- (BOOL)createRollbackDatabase:(NSError **)error {
+    DLog(@"creating a rollback copy of the current database");
+    return [self copyDatabaseToPath:[self pathToRollbackDatabase] error:error];
+}
+
+- (BOOL)copyDatabaseToPath:(NSString *)path error:(NSError **)error {
+    NSFileManager *fm = [NSFileManager defaultManager];
+    if ([fm fileExistsAtPath:path]) {
+		DLog(@"file already exists at this path, removing...");
+		BOOL removed = [fm removeItemAtPath:path error:error];
+		if (removed == NO) {
+			DLog(@"unable to remove old version of backup database: %@", error);
+			return NO;
+		}
+	}
+    BOOL copied = [fm copyItemAtPath:[self pathToDatabase] toPath:path error:error];
+	if (copied == NO) {		
+		NSLog(@"could not copy database to path %@: %@", path, error);
+		return NO;
+	}
+    return YES;
 }
 
 #pragma mark -
