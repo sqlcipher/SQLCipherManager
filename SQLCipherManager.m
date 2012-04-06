@@ -27,11 +27,13 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 @synthesize databaseUrl=_databaseUrl;
 @dynamic databasePath;
 @synthesize useHMACPageProtection=_useHMACPageProtection;
+@synthesize upgradeToHMACPageProtection=_upgradeToHMACPageProtection;
 
 - (id)init {
     self = [super init];
     if (self) {
-        _useHMACPageProtection = YES;
+        _useHMACPageProtection       = YES;
+        _upgradeToHMACPageProtection = NO;
     }
     return self;
 }
@@ -155,8 +157,9 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
     // open with CBC, 10,000 iterations
     DLog(@"attempting to open in CBC mode, with 10,000 iterations");
     if (!(unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"10000"])) {
-        // if that doesn't work, *turn off HMAC* (legacy DBs have no HMAC page protection) and try legacy settings
-        [self execute:@"PRAGMA cipher_use_hmac = OFF;" error:NULL];
+        // indicate to openDatabaseWithOptions: that it will have to disable HMAC
+        // allowing our rekey afterwards to enable HMAC on the new db
+        self.upgradeToHMACPageProtection = YES;
         DLog(@"attempting to open in CBC mode, with 4,000 iterations");
         if ((unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000"])) {
             DLog(@"initiating re-key to new settings");
@@ -176,6 +179,8 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
                 }
             }
         }
+        // ensure that this is off, so we no longer try to open the DB with hmac page protection
+        self.upgradeToHMACPageProtection = NO;
     }
 	
 	// if unlocked, check to see if there's any needed schema updates
@@ -199,11 +204,6 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 - (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSString *)iterations {
     BOOL unlocked = NO;
     if (sqlite3_open([[self pathToDatabase] UTF8String], &database) == SQLITE_OK) {
-        // make sure to turn off HMAC now if the application doesn't want it (e.g. isn't ready for SQLCipher 2.0)
-        if (_useHMACPageProtection == NO) {
-            DLog(@"HMAC page protection has been disabled");
-            [self execute:@"PRAGMA cipher_default_use_hmac = OFF;" error:NULL];
-        }
         
         // submit the password
         const char *key = [password UTF8String];
@@ -215,6 +215,16 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 
         if (iterations) {
             [self execute:[NSString stringWithFormat:@"PRAGMA kdf_iter='%@';", iterations] error:NULL];
+        }
+        
+        // make sure to turn off HMAC now if the application doesn't want it (e.g. isn't ready for SQLCipher 2.0)
+        if (_useHMACPageProtection == NO) {
+            DLog(@"HMAC page protection has been disabled");
+            [self execute:@"PRAGMA cipher_default_use_hmac = OFF;" error:NULL];
+        }
+        // if we're planning to upgrade a legacy DB, we need to temporarily disable HMAC when we open it
+        if (_upgradeToHMACPageProtection == YES) {
+            [self execute:@"PRAGMA cipher_use_hmac = OFF;" error: NULL];
         }
 
         unlocked = [self isDatabaseUnlocked];
@@ -340,6 +350,14 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
         if (![self restoreDatabaseFromFileAtPath:[self pathToRekeyDatabase] error:error]) {
             failed = YES;
         }
+        
+        // before we call open again, we should disable the use of cipher_use_hmac = OFF; so the new DB has HMAC.
+        // if the caller does not want that, he can set self.useHMACPageProtection = NO and cipher_default_use_hmac
+        // will be used.
+        if (self.upgradeToHMACPageProtection) {
+            self.upgradeToHMACPageProtection = NO;
+        }
+        
         // test that our new db works
         if (!([self openDatabaseWithOptions:password cipher:cipher iterations:iterations] && [self isDatabaseUnlocked])) {
             failed = YES;
