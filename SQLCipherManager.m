@@ -244,8 +244,7 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 - (BOOL)rekeyDatabaseWithOptions:(NSString*)password 
                           cipher:(NSString*)cipher 
                       iterations:(NSString *)iterations 
-                           error:(NSError **)error 
-{	
+                           error:(NSError **)error {
     if (delegate && [delegate respondsToSelector:@selector(sqlCipherManagerWillRekeyDatabase)])
         [delegate sqlCipherManagerWillRekeyDatabase];
     
@@ -259,6 +258,12 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 		// halt immediatly, can't create a backup
 		return NO;
 	}
+    
+    // make sure there's no older rekey database in the way here
+    if ([fm fileExistsAtPath: [self pathToRekeyDatabase]]) {
+        DLog(@"Removing older rekey database found on disk");
+        [fm removeItemAtPath:[self pathToRekeyDatabase] error:error];
+    }
 	
 	// 2. Attach a re-key database
     NSString *sql = nil;
@@ -370,7 +375,9 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 	if (failed == NO) {
 		DLog(@"rekey tested successfully, removing backup file %@", [self pathToRollbackDatabase]);
 		// 3.a. remove backup db file, return YES
-		[fm removeItemAtPath:[self pathToRollbackDatabase] error:error];
+		[fm removeItemAtPath:[self pathToRollbackDatabase] error:nil];
+        // Remove the rekey db, too, since we copied it over
+        [fm removeItemAtPath:[self pathToRekeyDatabase] error:nil];
 	} else { // ah, but there were failures...
 		// 3.b. close db, replace file with backup
 		NSLog(@"rekey test failed, restoring db from backup");
