@@ -346,7 +346,9 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
     // this method just returns YES in iOS, is not implemented
     NSError *error;
     exists = [[self databaseUrl] checkResourceIsReachableAndReturnError:&error];
-    DLog(@"database DNE, error: %@", error);
+    if (exists == NO && error) {
+        DLog(@"database DNE, error: %@", error);
+    }
 #else
     NSFileManager *fm = [NSFileManager defaultManager];
     exists = [fm fileExistsAtPath:[[self databaseUrl] path]];
@@ -504,7 +506,7 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
         NSMutableDictionary *dict = [NSMutableDictionary dictionary];
         [dict setObject:query forKey:SQLCipherManagerUserInfoQueryKey];
         NSString *errorString = [NSString stringWithFormat:@"SQLite error %d: %s", sqlite3_errcode(database), sqlite3_errmsg(database)];
-        DLog(errorString);
+        DLog(@"%@", errorString);
         
         if (inTransaction) {
 			NSLog(@"ROLLBACK");
