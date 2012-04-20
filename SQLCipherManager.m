@@ -332,6 +332,18 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 	return NO;
 }
 
+- (BOOL)reopenDatabase:(NSError **)error {
+    [self reallyCloseDatabase];
+    if ([self openDatabaseWithCachedPassword]) {
+        return YES;
+    } else {
+        if (error != NULL) {
+            *error = [[self class] errorUsingDatabase:@"Unable to re-open database" reason:@"Unable to open database with cached password"];
+        }
+        return NO;
+    }
+}
+
 # pragma mark -
 # pragma mark Backup and file location methods
 
