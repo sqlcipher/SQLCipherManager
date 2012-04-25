@@ -425,6 +425,18 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 	return NO;
 }
 
+- (BOOL)reopenDatabase:(NSError **)error {
+    [self reallyCloseDatabase];
+    if ([self openDatabaseWithCachedPassword]) {
+        return YES;
+    } else {
+        if (error != NULL) {
+            *error = [[self class] errorUsingDatabase:@"Unable to re-open database" reason:@"Unable to open database with cached password"];
+        }
+        return NO;
+    }
+}
+
 # pragma mark -
 # pragma mark Backup and file location methods
 
@@ -439,7 +451,9 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
     // this method just returns YES in iOS, is not implemented
     NSError *error;
     exists = [[self databaseUrl] checkResourceIsReachableAndReturnError:&error];
-    DLog(@"database DNE, error: %@", error);
+    if (exists == NO && error) {
+        DLog(@"database DNE, error: %@", error);
+    }
 #else
     NSFileManager *fm = [NSFileManager defaultManager];
     exists = [fm fileExistsAtPath:[[self databaseUrl] path]];

@@ -68,6 +68,7 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 - (void)closeDatabase;
 - (void)reallyCloseDatabase;
 - (BOOL)isDatabaseUnlocked;
+- (BOOL)reopenDatabase:(NSError **)error;
 
 // Backup and File Location methods
 - (NSString *)databaseDirectory;
