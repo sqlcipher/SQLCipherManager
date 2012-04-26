@@ -449,9 +449,9 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
     BOOL exists = NO;
 #if !TARGET_OS_IPHONE
     // this method just returns YES in iOS, is not implemented
-    NSError *error;
+    NSError *error = nil;
     exists = [[self databaseUrl] checkResourceIsReachableAndReturnError:&error];
-    if (exists == NO && error) {
+    if (exists == NO && error != nil) {
         DLog(@"database DNE, error: %@", error);
     }
 #else
