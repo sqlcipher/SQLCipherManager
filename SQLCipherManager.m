@@ -256,6 +256,12 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
     NSFileManager *fm = [NSFileManager defaultManager];
     BOOL failed = NO; // used to track whether any sqlcipher operations have yet failed
     
+    // if HMAC page protection should be on (e.g. we're doing an upgrade), make it so:
+    if (self.useHMACPageProtection) {
+        DLog(@"Ensuring HMAC page protection is on by default for re-key");
+        [self execute:@"PRAGMA cipher_default_use_hmac = ON;" error:NULL];
+    }
+    
 	// 1. backup current db file
     BOOL copied = [self createRollbackDatabase:error];
     if (copied == NO) {		
