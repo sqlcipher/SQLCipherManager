@@ -210,6 +210,12 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
     BOOL unlocked = NO;
     if (sqlite3_open([[self pathToDatabase] UTF8String], &database) == SQLITE_OK) {
         
+        // HMAC page protection is enabled by default in SQLCipher 2.0
+        if (useHMAC == NO) {
+            DLog(@"HMAC page protection has been disabled");
+            [self execute:@"PRAGMA cipher_default_use_hmac = OFF;" error:NULL];
+        }
+        
         // submit the password
         const char *key = [password UTF8String];
         sqlite3_key(database, key, strlen(key));
@@ -220,12 +226,6 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
         
         if (iterations) {
             [self execute:[NSString stringWithFormat:@"PRAGMA kdf_iter='%@';", iterations] error:NULL];
-        }
-        
-        // HMAC page protection is enabled by default in SQLCipher 2.0
-        if (useHMAC == NO) {
-            DLog(@"HMAC page protection has been disabled");
-            [self execute:@"PRAGMA cipher_default_use_hmac = OFF;" error:NULL];
         }
                 
         unlocked = [self isDatabaseUnlocked];
