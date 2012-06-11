@@ -27,13 +27,11 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 @synthesize databaseUrl=_databaseUrl;
 @dynamic databasePath;
 @synthesize useHMACPageProtection=_useHMACPageProtection;
-@synthesize upgradeToHMACPageProtection=_upgradeToHMACPageProtection;
 
 - (id)init {
     self = [super init];
     if (self) {
         _useHMACPageProtection       = YES;
-        _upgradeToHMACPageProtection = NO;
     }
     return self;
 }
@@ -142,7 +140,7 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 # pragma mark Open, Create, Re-Key and Close Tasks
 
 - (void)createDatabaseWithPassword:(NSString *)password {
-	if ([self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"10000"]) {
+	if ([self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000" withHMAC:self.useHMACPageProtection]) {
 		self.cachedPassword = password;
 		if (self.delegate && [self.delegate respondsToSelector:@selector(didCreateDatabase)]) {
 			DLog(@"Calling delegate now that db has been created.");
@@ -154,33 +152,26 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 - (BOOL)openDatabaseWithPassword:(NSString *)password {
 	BOOL unlocked = NO;
     NSError *error;
-    // open with CBC, 10,000 iterations
-    DLog(@"attempting to open in CBC mode, with 10,000 iterations");
-    if (!(unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"10000"])) {
-        // indicate to openDatabaseWithOptions: that it will have to disable HMAC
-        // allowing our rekey afterwards to enable HMAC on the new db
-        self.upgradeToHMACPageProtection = YES;
-        DLog(@"attempting to open in CBC mode, with 4,000 iterations");
-        if ((unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000"])) {
-            DLog(@"initiating re-key to new settings");
-            unlocked = [self rekeyDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"10000" error:&error];
-            if (!unlocked && error) {
-                DLog(@"error re-keying database: %@", error);
-            }
-        }
-        else {
-            // try the original settings, CFB, 4,000 iterations, and re-key
-            DLog(@"attempting to open in CFB mode, with 4,000 iterations");
-            if ((unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cfb" iterations:@"4000"])) {
+    
+    // open with default options
+    DLog(@"attempting to open in CBC mode, with 4,000 iterations, HMAC enabled: %d", self.useHMACPageProtection);
+    if (!(unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000" withHMAC:self.useHMACPageProtection])) {
+        // if HMAC was turned on, try it without and re-key if it works
+        if (self.useHMACPageProtection) {
+            if ((unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000" withHMAC:NO])) {
                 DLog(@"initiating re-key to new settings");
-                unlocked = [self rekeyDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"10000" error:&error];
+                unlocked = [self rekeyDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000" error:&error];
                 if (!unlocked && error) {
                     DLog(@"error re-keying database: %@", error);
                 }
+            } else {
+                // try the legacy database settings
+                unlocked = [self openAndRekeyCFBDatabaseWithPassword:password];
             }
+        } else {
+            // try the legacy database settings
+            unlocked = [self openAndRekeyCFBDatabaseWithPassword:password];
         }
-        // ensure that this is off, so we no longer try to open the DB with hmac page protection
-        self.upgradeToHMACPageProtection = NO;
     }
 	
 	// if unlocked, check to see if there's any needed schema updates
@@ -197,36 +188,46 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 	return unlocked;
 }
 
+- (BOOL)openAndRekeyCFBDatabaseWithPassword:(NSString *)password {
+    BOOL unlocked = NO;
+    NSError *error;
+    DLog(@"attempting to open in CFB mode, with 4,000 iterations");
+    if ((unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cfb" iterations:@"4000"])) {
+        DLog(@"initiating re-key to new settings");
+        unlocked = [self rekeyDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000" error:&error];
+        if (!unlocked && error) {
+            DLog(@"error re-keying database: %@", error);
+        }
+    }
+    return unlocked;
+}
+
 - (BOOL)openDatabaseWithCachedPassword {
 	return [self openDatabaseWithPassword:self.cachedPassword];
 }
 
-- (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSString *)iterations {
+- (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSString *)iterations withHMAC:(BOOL)useHMAC {
     BOOL unlocked = NO;
     if (sqlite3_open([[self pathToDatabase] UTF8String], &database) == SQLITE_OK) {
         
         // submit the password
         const char *key = [password UTF8String];
         sqlite3_key(database, key, strlen(key));
-
+        
         if (cipher) {
             [self execute:[NSString stringWithFormat:@"PRAGMA cipher='%@';", cipher] error:NULL];
         }
-
+        
         if (iterations) {
             [self execute:[NSString stringWithFormat:@"PRAGMA kdf_iter='%@';", iterations] error:NULL];
         }
         
-        // make sure to turn off HMAC now if the application doesn't want it (e.g. isn't ready for SQLCipher 2.0)
-        if (_useHMACPageProtection == NO) {
+        // HMAC page protection is enabled by default in SQLCipher 2.0
+        if (useHMAC == NO) {
             DLog(@"HMAC page protection has been disabled");
             [self execute:@"PRAGMA cipher_default_use_hmac = OFF;" error:NULL];
         }
-        // if we're planning to upgrade a legacy DB, we need to temporarily disable HMAC when we open it
-        if (_upgradeToHMACPageProtection == YES) {
-            [self execute:@"PRAGMA cipher_use_hmac = OFF;" error: NULL];
-        }
-
+                
         unlocked = [self isDatabaseUnlocked];
         if (!unlocked) {
             sqlite3_close(database);
@@ -235,6 +236,10 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
         NSAssert1(0, @"Unable to open database file '%s'", sqlite3_errmsg(database));
     }
     return unlocked;
+}
+
+- (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSString *)iterations {
+    return [self openDatabaseWithOptions:password cipher:cipher iterations:iterations withHMAC:self.useHMACPageProtection];
 }
 
 - (BOOL)rekeyDatabaseWithPassword:(NSString *)password {
@@ -356,15 +361,8 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
             failed = YES;
         }
         
-        // before we call open again, we should disable the use of cipher_use_hmac = OFF; so the new DB has HMAC.
-        // if the caller does not want that, he can set self.useHMACPageProtection = NO and cipher_default_use_hmac
-        // will be used.
-        if (self.upgradeToHMACPageProtection) {
-            self.upgradeToHMACPageProtection = NO;
-        }
-        
         // test that our new db works
-        if (!([self openDatabaseWithOptions:password cipher:cipher iterations:iterations] && [self isDatabaseUnlocked])) {
+        if (!([self openDatabaseWithOptions:password cipher:cipher iterations:iterations])) {
             failed = YES;
             *error = [SQLCipherManager errorUsingDatabase:@"Unable to open database after moving rekey into place" 
                                                    reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];

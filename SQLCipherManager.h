@@ -32,7 +32,6 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 	id delegate;
 	NSString *cachedPassword;
     BOOL _useHMACPageProtection;
-    BOOL _upgradeToHMACPageProtection;
 @private
     NSURL *_databaseUrl;
 }
@@ -45,7 +44,6 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 @property (nonatomic, retain) NSString *databasePath;
 @property (nonatomic, retain) NSURL *databaseUrl;
 @property (nonatomic) BOOL useHMACPageProtection;
-@property (nonatomic) BOOL upgradeToHMACPageProtection;
 
 - (id)initWithURL:(NSURL *)absoluteUrl;
 - (id)initWithPath:(NSString *)path; // DEPRECATED
@@ -60,6 +58,8 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 - (BOOL)openDatabaseWithPassword:(NSString *)password;
 - (BOOL)openDatabaseWithCachedPassword;
 - (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSString *)iterations;
+- (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSString *)iterations withHMAC:(BOOL)useHMAC;
+- (BOOL)openAndRekeyCFBDatabaseWithPassword:(NSString *)password;
 - (BOOL)rekeyDatabaseWithPassword:(NSString *)password;
 - (BOOL)rekeyDatabaseWithOptions:(NSString*)password 
                           cipher:(NSString*)cipher 
