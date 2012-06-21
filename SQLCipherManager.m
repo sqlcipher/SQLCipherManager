@@ -27,6 +27,7 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 @synthesize databaseUrl=_databaseUrl;
 @dynamic databasePath;
 @synthesize useHMACPageProtection=_useHMACPageProtection;
+@dynamic schemaVersion;
 
 - (id)init {
     self = [super init];
@@ -557,6 +558,10 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 #pragma mark Schema methods
 
 - (NSInteger)getSchemaVersion {
+    return self.schemaVersion;
+}
+
+- (NSInteger)schemaVersion {
     NSString *scalar = [self getScalarWith:@"PRAGMA user_version;"];
     return [scalar integerValue];
 }

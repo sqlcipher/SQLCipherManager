@@ -44,6 +44,7 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 @property (nonatomic, retain) NSString *databasePath;
 @property (nonatomic, retain) NSURL *databaseUrl;
 @property (nonatomic) BOOL useHMACPageProtection;
+@property (nonatomic) NSInteger schemaVersion;
 
 - (id)initWithURL:(NSURL *)absoluteUrl;
 - (id)initWithPath:(NSString *)path; // DEPRECATED
@@ -83,8 +84,7 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 - (BOOL)copyDatabaseToPath:(NSString *)path error:(NSError **)error;
 
 // Schema methods
-- (NSInteger)getSchemaVersion;
-- (void)setSchemaVersion:(NSInteger)version;
+- (NSInteger)getSchemaVersion; // DEPRECATED, use schemaVersion dynamic property
 
 // Query / Transaction methods
 - (void)execute:(NSString *)sqlCommand; // throws an NSException on command failure
