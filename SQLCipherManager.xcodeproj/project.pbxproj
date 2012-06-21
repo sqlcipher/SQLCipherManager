@@ -9,17 +9,43 @@
 /* Begin PBXBuildFile section */
 		136DF18C10F26A3A000DDCA7 /* SQLCipherManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 136DF18A10F26A3A000DDCA7 /* SQLCipherManager.h */; };
 		136DF18D10F26A3A000DDCA7 /* SQLCipherManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 136DF18B10F26A3A000DDCA7 /* SQLCipherManager.m */; };
+		2860AB83159387D1001CBD5F /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2860AB82159387D1001CBD5F /* SenTestingKit.framework */; };
+		2860AB85159387D1001CBD5F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2860AB84159387D1001CBD5F /* Cocoa.framework */; };
+		2860AB8F159387D1001CBD5F /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 2860AB8D159387D1001CBD5F /* InfoPlist.strings */; };
+		2860AB92159387D1001CBD5F /* SQLCipherManagerTestsOSX.m in Sources */ = {isa = PBXBuildFile; fileRef = 2860AB91159387D1001CBD5F /* SQLCipherManagerTestsOSX.m */; };
+		2860ABAF15938B69001CBD5F /* libSQLCipherManager.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D2AAC07E0554694100DB518D /* libSQLCipherManager.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0867D69BFE84028FC02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		136DF18A10F26A3A000DDCA7 /* SQLCipherManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SQLCipherManager.h; sourceTree = "<group>"; };
 		136DF18B10F26A3A000DDCA7 /* SQLCipherManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SQLCipherManager.m; sourceTree = "<group>"; };
+		2860AB80159387D1001CBD5F /* SQLCipherManagerTestsOSX.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SQLCipherManagerTestsOSX.octest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2860AB82159387D1001CBD5F /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
+		2860AB84159387D1001CBD5F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
+		2860AB87159387D1001CBD5F /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		2860AB88159387D1001CBD5F /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
+		2860AB89159387D1001CBD5F /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		2860AB8C159387D1001CBD5F /* SQLCipherManagerTestsOSX-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "SQLCipherManagerTestsOSX-Info.plist"; sourceTree = "<group>"; };
+		2860AB8E159387D1001CBD5F /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		2860AB90159387D1001CBD5F /* SQLCipherManagerTestsOSX.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SQLCipherManagerTestsOSX.h; sourceTree = "<group>"; };
+		2860AB91159387D1001CBD5F /* SQLCipherManagerTestsOSX.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SQLCipherManagerTestsOSX.m; sourceTree = "<group>"; };
+		2860AB93159387D1001CBD5F /* SQLCipherManagerTestsOSX-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SQLCipherManagerTestsOSX-Prefix.pch"; sourceTree = "<group>"; };
 		32DBCF5E0370ADEE00C91783 /* SQLCipherManager_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SQLCipherManager_Prefix.pch; sourceTree = "<group>"; };
 		D2AAC07E0554694100DB518D /* libSQLCipherManager.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSQLCipherManager.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		2860AB7C159387D1001CBD5F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2860ABAF15938B69001CBD5F /* libSQLCipherManager.a in Frameworks */,
+				2860AB83159387D1001CBD5F /* SenTestingKit.framework in Frameworks */,
+				2860AB85159387D1001CBD5F /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D2AAC07C0554694100DB518D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -34,6 +60,7 @@
 			isa = PBXGroup;
 			children = (
 				D2AAC07E0554694100DB518D /* libSQLCipherManager.a */,
+				2860AB80159387D1001CBD5F /* SQLCipherManagerTestsOSX.octest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -44,6 +71,8 @@
 				08FB77AEFE84172EC02AAC07 /* Classes */,
 				32C88DFF0371C24200C91783 /* Other Sources */,
 				0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */,
+				2860AB8A159387D1001CBD5F /* SQLCipherManagerTestsOSX */,
+				2860AB81159387D1001CBD5F /* Frameworks */,
 				034768DFFF38A50411DB9C8B /* Products */,
 			);
 			name = SQLCipherManager;
@@ -82,6 +111,46 @@
 			name = "Other Frameworks";
 			sourceTree = "<group>";
 		};
+		2860AB81159387D1001CBD5F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				2860AB82159387D1001CBD5F /* SenTestingKit.framework */,
+				2860AB84159387D1001CBD5F /* Cocoa.framework */,
+				2860AB86159387D1001CBD5F /* Other Frameworks */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		2860AB86159387D1001CBD5F /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				2860AB87159387D1001CBD5F /* AppKit.framework */,
+				2860AB88159387D1001CBD5F /* CoreData.framework */,
+				2860AB89159387D1001CBD5F /* Foundation.framework */,
+			);
+			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+		2860AB8A159387D1001CBD5F /* SQLCipherManagerTestsOSX */ = {
+			isa = PBXGroup;
+			children = (
+				2860AB90159387D1001CBD5F /* SQLCipherManagerTestsOSX.h */,
+				2860AB91159387D1001CBD5F /* SQLCipherManagerTestsOSX.m */,
+				2860AB8B159387D1001CBD5F /* Supporting Files */,
+			);
+			path = SQLCipherManagerTestsOSX;
+			sourceTree = "<group>";
+		};
+		2860AB8B159387D1001CBD5F /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				2860AB8C159387D1001CBD5F /* SQLCipherManagerTestsOSX-Info.plist */,
+				2860AB8D159387D1001CBD5F /* InfoPlist.strings */,
+				2860AB93159387D1001CBD5F /* SQLCipherManagerTestsOSX-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
 		32C88DFF0371C24200C91783 /* Other Sources */ = {
 			isa = PBXGroup;
 			children = (
@@ -104,6 +173,24 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		2860AB7F159387D1001CBD5F /* SQLCipherManagerTestsOSX */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2860AB96159387D1001CBD5F /* Build configuration list for PBXNativeTarget "SQLCipherManagerTestsOSX" */;
+			buildPhases = (
+				2860AB7B159387D1001CBD5F /* Sources */,
+				2860AB7C159387D1001CBD5F /* Frameworks */,
+				2860AB7D159387D1001CBD5F /* Resources */,
+				2860AB7E159387D1001CBD5F /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SQLCipherManagerTestsOSX;
+			productName = SQLCipherManagerTestsOSX;
+			productReference = 2860AB80159387D1001CBD5F /* SQLCipherManagerTestsOSX.octest */;
+			productType = "com.apple.product-type.bundle";
+		};
 		D2AAC07D0554694100DB518D /* SQLCipherManager */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1DEB921E08733DC00010E9CD /* Build configuration list for PBXNativeTarget "SQLCipherManager" */;
@@ -138,6 +225,7 @@
 				Japanese,
 				French,
 				German,
+				en,
 			);
 			mainGroup = 0867D691FE84028FC02AAC07 /* SQLCipherManager */;
 			productRefGroup = 034768DFFF38A50411DB9C8B /* Products */;
@@ -145,11 +233,47 @@
 			projectRoot = "";
 			targets = (
 				D2AAC07D0554694100DB518D /* SQLCipherManager */,
+				2860AB7F159387D1001CBD5F /* SQLCipherManagerTestsOSX */,
 			);
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		2860AB7D159387D1001CBD5F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2860AB8F159387D1001CBD5F /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		2860AB7E159387D1001CBD5F /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Run the unit tests in this test bundle.\n\"${SYSTEM_DEVELOPER_DIR}/Tools/RunUnitTests\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
+		2860AB7B159387D1001CBD5F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2860AB92159387D1001CBD5F /* SQLCipherManagerTestsOSX.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D2AAC07B0554694100DB518D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -159,6 +283,17 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		2860AB8D159387D1001CBD5F /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				2860AB8E159387D1001CBD5F /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		1DEB921F08733DC00010E9CD /* Debug */ = {
@@ -251,6 +386,57 @@
 			};
 			name = Release;
 		};
+		2860AB94159387D1001CBD5F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = "$(DEVELOPER_LIBRARY_DIR)/Frameworks";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "SQLCipherManagerTestsOSX/SQLCipherManagerTestsOSX-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				INFOPLIST_FILE = "SQLCipherManagerTestsOSX/SQLCipherManagerTestsOSX-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				WRAPPER_EXTENSION = octest;
+			};
+			name = Debug;
+		};
+		2860AB95159387D1001CBD5F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				FRAMEWORK_SEARCH_PATHS = "$(DEVELOPER_LIBRARY_DIR)/Frameworks";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "SQLCipherManagerTestsOSX/SQLCipherManagerTestsOSX-Prefix.pch";
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				INFOPLIST_FILE = "SQLCipherManagerTestsOSX/SQLCipherManagerTestsOSX-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				WRAPPER_EXTENSION = octest;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -271,6 +457,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		2860AB96159387D1001CBD5F /* Build configuration list for PBXNativeTarget "SQLCipherManagerTestsOSX" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2860AB94159387D1001CBD5F /* Debug */,
+				2860AB95159387D1001CBD5F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 /* End XCConfigurationList section */
 	};
