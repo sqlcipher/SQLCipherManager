@@ -662,16 +662,8 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 }
 
 - (NSInteger)countForSQL:(NSString *)countSQL {
-	NSInteger count = 0;
-	sqlite3_stmt *stmt;
-	if (sqlite3_prepare_v2(database, [countSQL UTF8String], -1, &stmt, NULL) == SQLITE_OK) {
-		if (sqlite3_step(stmt) == SQLITE_ROW) {
-			count = sqlite3_column_int(stmt, 0);
-		} // else is still zero
-	} else {
-		NSAssert1(0, @"Unable to prepare query '%s'", sqlite3_errmsg(database));
-	}
-	sqlite3_finalize(stmt);
+    NSString *scalar = [self getScalarWith:countSQL];
+    NSInteger count = [scalar integerValue];
 	return count;
 }
 
