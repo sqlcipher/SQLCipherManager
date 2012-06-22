@@ -172,10 +172,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = SQLCipherManager_Prefix.pch;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
-				HEADER_SEARCH_PATHS = (
-					../sqlcipher,
-					"$(OPENSSL_SRC)/include",
-				);
+				HEADER_SEARCH_PATHS = "../../sqlcipher-static-ios/include";
 				INSTALL_PATH = /usr/local/lib;
 				OTHER_CFLAGS = (
 					"-DSQLITE_HAS_CODEC",
@@ -194,10 +191,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = SQLCipherManager_Prefix.pch;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
-				HEADER_SEARCH_PATHS = (
-					../sqlcipher,
-					"$(OPENSSL_SRC)/include",
-				);
+				HEADER_SEARCH_PATHS = "../../sqlcipher-static-ios/include";
 				INSTALL_PATH = /usr/local/lib;
 				OTHER_CFLAGS = (
 					"-DSQLITE_HAS_CODEC",
