@@ -261,6 +261,10 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
     if (self.useHMACPageProtection) {
         DLog(@"Ensuring HMAC page protection is on by default for re-key");
         [self execute:@"PRAGMA cipher_default_use_hmac = ON;" error:NULL];
+    } else {
+        // otherwise, better turn it off for this operation, caller may be looking
+        // to create another non-HMAC database
+        [self execute:@"PRAGMA cipher_default_use_hmac = OFF;" error:NULL];
     }
     
 	// 1. backup current db file
@@ -369,7 +373,7 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
         }
         
         // test that our new db works
-        if (!([self openDatabaseWithOptions:password cipher:cipher iterations:iterations])) {
+        if (!([self openDatabaseWithOptions:password cipher:cipher iterations:iterations withHMAC:self.useHMACPageProtection])) {
             failed = YES;
             *error = [SQLCipherManager errorUsingDatabase:@"Unable to open database after moving rekey into place" 
                                                    reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
