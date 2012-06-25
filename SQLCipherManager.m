@@ -28,6 +28,7 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 @dynamic databasePath;
 @synthesize useHMACPageProtection=_useHMACPageProtection;
 @dynamic schemaVersion;
+@dynamic isDatabaseUnlocked;
 
 - (id)init {
     self = [super init];

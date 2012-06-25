@@ -45,6 +45,7 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 @property (nonatomic, retain) NSURL *databaseUrl;
 @property (nonatomic) BOOL useHMACPageProtection;
 @property (nonatomic) NSInteger schemaVersion;
+@property (nonatomic, readonly) BOOL isDatabaseUnlocked;
 
 - (id)initWithURL:(NSURL *)absoluteUrl;
 - (id)initWithPath:(NSString *)path; // DEPRECATED
@@ -68,7 +69,6 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
                            error:(NSError **)error;
 - (void)closeDatabase;
 - (void)reallyCloseDatabase;
-- (BOOL)isDatabaseUnlocked;
 - (BOOL)reopenDatabase:(NSError **)error;
 
 // Backup and File Location methods
