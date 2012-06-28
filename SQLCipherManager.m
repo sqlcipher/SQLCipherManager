@@ -633,6 +633,23 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 	return YES;
 }
 
+- (void)execute:(NSString *)query withBlock:(void (^)(sqlite3_stmt *stmt))block
+{
+	sqlite3_stmt *stmt;
+	if (sqlite3_prepare_v2(database, [query UTF8String], -1, &stmt, NULL) == SQLITE_OK) 
+	{
+		while (sqlite3_step(stmt) == SQLITE_ROW)
+		{
+			block(stmt);
+		}
+	}
+	else {
+		NSAssert1(0, @"Unable to prepare query '%s'", sqlite3_errmsg(database));
+	}
+	sqlite3_finalize(stmt);
+	return;
+}
+
 - (NSString *)getScalarWith:(NSString*)query {
 	sqlite3_stmt *stmt;
 	NSString *scalar;
