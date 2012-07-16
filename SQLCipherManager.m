@@ -216,6 +216,8 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
         if (useHMAC == NO) {
             DLog(@"HMAC page protection has been disabled");
             [self execute:@"PRAGMA cipher_default_use_hmac = OFF;" error:NULL];
+        } else {
+            [self execute:@"PRAGMA cipher_default_use_hmac = ON;" error:NULL];
         }
         
         // submit the password
