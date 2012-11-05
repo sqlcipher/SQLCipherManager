@@ -635,6 +635,7 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 	return YES;
 }
 
+/* FIXME: this should throw (or return from block) an NSException, or an NSError pointer, not NSAssert (crash) */
 - (void)execute:(NSString *)query withBlock:(void (^)(sqlite3_stmt *stmt))block
 {
 	sqlite3_stmt *stmt;
