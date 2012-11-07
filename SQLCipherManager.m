@@ -343,7 +343,7 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
         }
         // we need to update the user version, too
         NSInteger version = [self getSchemaVersion];
-        sql = [NSString stringWithFormat:@"PRAGMA rekey.user_version = %d", version];
+        sql = [NSString stringWithFormat:@"PRAGMA rekey.user_version = %ld", version];
         rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, NULL);
         if (rc != SQLITE_OK) {
             failed = YES;
@@ -549,13 +549,13 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 		DLog(@"file already exists at this path, removing...");
 		BOOL removed = [fm removeItemAtPath:path error:error];
 		if (removed == NO) {
-			DLog(@"unable to remove old version of backup database: %@", error);
+			DLog(@"unable to remove old version of backup database: %@", *error);
 			return NO;
 		}
 	}
     BOOL copied = [fm copyItemAtPath:[self pathToDatabase] toPath:path error:error];
 	if (copied == NO) {		
-		NSLog(@"could not copy database to path %@: %@", path, error);
+		NSLog(@"could not copy database to path %@: %@", path, *error);
 		return NO;
 	}
     return YES;
@@ -574,8 +574,8 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 }
 
 - (void)setSchemaVersion:(NSInteger)newVersion {
-	NSAssert1(newVersion >= 0, @"New version %d is less than zero, only signed integers allowed", newVersion);
-    NSString *sql = [NSString stringWithFormat:@"PRAGMA user_version = '%d';", newVersion];
+	NSAssert1(newVersion >= 0, @"New version %ld is less than zero, only signed integers allowed", newVersion);
+    NSString *sql = [NSString stringWithFormat:@"PRAGMA user_version = '%ld';", newVersion];
     [self execute:sql];
 }
 
