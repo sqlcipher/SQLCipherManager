@@ -30,6 +30,8 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 @dynamic schemaVersion;
 @dynamic isDatabaseUnlocked;
 
+static SQLCipherManager *sharedManager = nil;
+
 - (id)init {
     self = [super init];
     if (self) {
@@ -109,14 +111,14 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 	return [NSError errorWithDomain:SQLCipherManagerErrorDomain code:ERR_SQLCIPHER_COMMAND_FAILED userInfo:userInfo]; 
 }
 
-+ (id)sharedManager
-{
-	// static var is initialized at compile time
-	static SQLCipherManager *sharedManager = nil;
-	
++ (id)sharedManager {	
 	if(!sharedManager)
 		sharedManager = [[self alloc] init];
 	return sharedManager;
+}
+
++ (void)setSharedManager:(SQLCipherManager *)manager {
+  sharedManager = manager;
 }
 
 + (BOOL)passwordIsValid:(NSString *)password  {
