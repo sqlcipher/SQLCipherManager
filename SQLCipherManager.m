@@ -292,18 +292,21 @@ static SQLCipherManager *sharedManager = nil;
     if (password != nil) {
         sql = [NSString stringWithFormat:@"ATTACH DATABASE '%@' AS rekey KEY '%@';", 
                [self pathToRekeyDatabase], 
-               password];
+               [password stringByReplacingOccurrencesOfString:@"'" withString:@"''"]];
     }
     else {
         // The current key will be used by ATTACH
         sql = [NSString stringWithFormat:@"ATTACH DATABASE '%@' AS rekey;", [self pathToRekeyDatabase]];
     }
-    int rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, NULL);
+    char *errorPointer;
+    int rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, &errorPointer);
     if (rc != SQLITE_OK) {
         failed = YES;
         // setup the error object
+        NSString *errMsg = [NSString stringWithCString:errorPointer encoding:NSUTF8StringEncoding];
         *error = [SQLCipherManager errorUsingDatabase:@"Unable to attach rekey database" 
-                                               reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+                                               reason:errMsg];
+        sqlite3_free(errorPointer);
     }
     
 	// 2.a rekey cipher
