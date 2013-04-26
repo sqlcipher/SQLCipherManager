@@ -348,7 +348,7 @@ static SQLCipherManager *sharedManager = nil;
         }
         // we need to update the user version, too
         NSInteger version = [self getSchemaVersion];
-        sql = [NSString stringWithFormat:@"PRAGMA rekey.user_version = %ld", version];
+        sql = [NSString stringWithFormat:@"PRAGMA rekey.user_version = %d", (int)version];
         rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, NULL);
         if (rc != SQLITE_OK) {
             failed = YES;
@@ -579,8 +579,8 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (void)setSchemaVersion:(NSInteger)newVersion {
-	NSAssert1(newVersion >= 0, @"New version %ld is less than zero, only signed integers allowed", newVersion);
-    NSString *sql = [NSString stringWithFormat:@"PRAGMA user_version = '%ld';", newVersion];
+	NSAssert1(newVersion >= 0, @"New version %d is less than zero, only signed integers allowed", (int)newVersion);
+    NSString *sql = [NSString stringWithFormat:@"PRAGMA user_version = '%d';", (int)newVersion];
     [self execute:sql];
 }
 
