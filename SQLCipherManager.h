@@ -60,12 +60,12 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 
 // Open, Close, and Re-Key methods
 - (void)createDatabaseWithPassword:(NSString *)password;
-- (BOOL)openDatabaseWithPassword:(NSString *)password;
+- (BOOL)openDatabaseWithPassword:(NSString *)password __attribute__((deprecated));
 - (BOOL)openDatabaseWithCachedPassword;
 - (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSInteger)iterations;
 - (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC;
-- (BOOL)openAndRekeyCFBDatabaseWithPassword:(NSString *)password;
-- (BOOL)rekeyDatabaseWithPassword:(NSString *)password;
+- (BOOL)openAndRekeyCFBDatabaseWithPassword:(NSString *)password __attribute__((deprecated));
+- (BOOL)rekeyDatabaseWithPassword:(NSString *)password __attribute__((deprecated));
 - (BOOL)rekeyDatabaseWithOptions:(NSString*)password 
                           cipher:(NSString*)cipher 
                       iterations:(NSInteger)iterations

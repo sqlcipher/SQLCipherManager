@@ -210,17 +210,6 @@ static SQLCipherManager *sharedManager = nil;
         }
     }
 	
-	// if unlocked, check to see if there's any needed schema updates
-	if(unlocked) {
-		self.cachedPassword = password;
-		DLog(@"Calling delegate now that DB is open.");
-		if (self.delegate && [self.delegate respondsToSelector:@selector(didOpenDatabase)]) { 
-			[self.delegate didOpenDatabase];
-		}
-	} else {
-		// close db handle
-		[self closeDatabase];
-	}
 	return unlocked;
 }
 
@@ -277,8 +266,14 @@ static SQLCipherManager *sharedManager = nil;
         }
                 
         unlocked = [self isDatabaseUnlocked];
-        if (!unlocked) {
+        if (unlocked == NO) {
             sqlite3_close(database);
+        } else {
+            self.cachedPassword = password;
+            DLog(@"Calling delegate now that DB is open.");
+            if (self.delegate && [self.delegate respondsToSelector:@selector(didOpenDatabase)]) {
+                [self.delegate didOpenDatabase];
+            }
         }
     } else {
         NSAssert1(0, @"Unable to open database file '%s'", sqlite3_errmsg(database));
