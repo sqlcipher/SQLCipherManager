@@ -32,6 +32,7 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 	id delegate;
 	NSString *cachedPassword;
     BOOL _useHMACPageProtection;
+    NSInteger _kdfIterations;
 @private
     NSURL *_databaseUrl;
 }
@@ -46,6 +47,7 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 @property (nonatomic) BOOL useHMACPageProtection;
 @property (nonatomic) NSInteger schemaVersion;
 @property (nonatomic, readonly) BOOL isDatabaseUnlocked;
+@property (nonatomic) NSInteger kdfIterations;
 
 - (id)initWithURL:(NSURL *)absoluteUrl;
 - (id)initWithPath:(NSString *)path; // DEPRECATED
@@ -60,13 +62,13 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 - (void)createDatabaseWithPassword:(NSString *)password;
 - (BOOL)openDatabaseWithPassword:(NSString *)password;
 - (BOOL)openDatabaseWithCachedPassword;
-- (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSString *)iterations;
-- (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSString *)iterations withHMAC:(BOOL)useHMAC;
+- (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSInteger)iterations;
+- (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC;
 - (BOOL)openAndRekeyCFBDatabaseWithPassword:(NSString *)password;
 - (BOOL)rekeyDatabaseWithPassword:(NSString *)password;
 - (BOOL)rekeyDatabaseWithOptions:(NSString*)password 
                           cipher:(NSString*)cipher 
-                      iterations:(NSString *)iterations 
+                      iterations:(NSInteger)iterations
                            error:(NSError **)error;
 - (void)closeDatabase;
 - (void)reallyCloseDatabase;

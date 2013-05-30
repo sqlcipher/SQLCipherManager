@@ -29,13 +29,15 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 @synthesize useHMACPageProtection=_useHMACPageProtection;
 @dynamic schemaVersion;
 @dynamic isDatabaseUnlocked;
+@synthesize kdfIterations=_kdfIterations;
 
 static SQLCipherManager *sharedManager = nil;
 
 - (id)init {
     self = [super init];
     if (self) {
-        _useHMACPageProtection       = YES;
+        _useHMACPageProtection  = YES;
+        _kdfIterations          = 40000;
     }
     return self;
 }
@@ -144,7 +146,7 @@ static SQLCipherManager *sharedManager = nil;
 # pragma mark Open, Create, Re-Key and Close Tasks
 
 - (void)createDatabaseWithPassword:(NSString *)password {
-	if ([self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000" withHMAC:self.useHMACPageProtection]) {
+	if ([self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:self.kdfIterations withHMAC:self.useHMACPageProtection]) {
 		self.cachedPassword = password;
 		if (self.delegate && [self.delegate respondsToSelector:@selector(didCreateDatabase)]) {
 			DLog(@"Calling delegate now that db has been created.");
@@ -157,24 +159,54 @@ static SQLCipherManager *sharedManager = nil;
 	BOOL unlocked = NO;
     NSError *error;
     
-    // open with default options
-    DLog(@"attempting to open in CBC mode, with 4,000 iterations, HMAC enabled: %d", self.useHMACPageProtection);
-    if (!(unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000" withHMAC:self.useHMACPageProtection])) {
-        // if HMAC was turned on, try it without and re-key if it works
-        if (self.useHMACPageProtection) {
-            if ((unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000" withHMAC:NO])) {
-                DLog(@"initiating re-key to new settings");
-                unlocked = [self rekeyDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000" error:&error];
-                if (!unlocked && error) {
-                    DLog(@"error re-keying database: %@", error);
+    // open with default options and current settings
+    DLog(@"attempting to open in CBC mode, with %d iterations, HMAC enabled: %d", (int)self.kdfIterations, self.useHMACPageProtection);
+    unlocked = [self openDatabaseWithOptions: password
+                                      cipher: @"aes-256-cbc"
+                                  iterations: self.kdfIterations
+                                    withHMAC: self.useHMACPageProtection];
+    if (unlocked == NO) {
+        // try it with 4000 iterations for older databases
+        unlocked = [self openDatabaseWithOptions: password
+                                          cipher: @"aes-256-cbc"
+                                      iterations: 4000
+                                        withHMAC: self.useHMACPageProtection];
+        if (unlocked) {
+            // upgrade to 40000 via re-key...
+            DLog(@"initiating re-key to new settings");
+            unlocked = [self rekeyDatabaseWithOptions: password
+                                               cipher: @"aes-256-cbc"
+                                           iterations: self.kdfIterations
+                                                error: &error];
+            if (unlocked == NO && error) {
+                DLog(@"error re-keying database: %@", error);
+            }
+            
+        } else {
+            // if HMAC was turned on, try it without and re-key if it works
+            if (self.useHMACPageProtection == YES) {
+                unlocked = [self openDatabaseWithOptions: password
+                                                  cipher: @"aes-256-cbc"
+                                              iterations: 4000
+                                                withHMAC: NO];
+                
+                if (unlocked == YES) {
+                    DLog(@"initiating re-key to new settings");
+                    unlocked = [self rekeyDatabaseWithOptions: password
+                                                       cipher: @"aes-256-cbc"
+                                                   iterations: self.kdfIterations
+                                                        error: &error];
+                    if (unlocked == NO && error) {
+                        DLog(@"error re-keying database: %@", error);
+                    }
+                } else {
+                    // try the legacy database settings
+                    unlocked = [self openAndRekeyCFBDatabaseWithPassword:password];
                 }
             } else {
                 // try the legacy database settings
                 unlocked = [self openAndRekeyCFBDatabaseWithPassword:password];
             }
-        } else {
-            // try the legacy database settings
-            unlocked = [self openAndRekeyCFBDatabaseWithPassword:password];
         }
     }
 	
@@ -196,9 +228,16 @@ static SQLCipherManager *sharedManager = nil;
     BOOL unlocked = NO;
     NSError *error;
     DLog(@"attempting to open in CFB mode, with 4,000 iterations");
-    if ((unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cfb" iterations:@"4000"])) {
+    unlocked = [self openDatabaseWithOptions: password
+                                      cipher: @"aes-256-cfb"
+                                  iterations: 4000];
+    
+    if (unlocked == YES) {
         DLog(@"initiating re-key to new settings");
-        unlocked = [self rekeyDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000" error:&error];
+        unlocked = [self rekeyDatabaseWithOptions: password
+                                           cipher: @"aes-256-cbc"
+                                       iterations: self.kdfIterations
+                                            error: &error];
         if (!unlocked && error) {
             DLog(@"error re-keying database: %@", error);
         }
@@ -210,7 +249,10 @@ static SQLCipherManager *sharedManager = nil;
 	return [self openDatabaseWithPassword:self.cachedPassword];
 }
 
-- (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSString *)iterations withHMAC:(BOOL)useHMAC {
+- (BOOL)openDatabaseWithOptions:(NSString*)password
+                         cipher:(NSString*)cipher
+                     iterations:(NSInteger)iterations
+                       withHMAC:(BOOL)useHMAC {
     BOOL unlocked = NO;
     if (sqlite3_open([[self pathToDatabase] UTF8String], &database) == SQLITE_OK) {
         
@@ -231,7 +273,7 @@ static SQLCipherManager *sharedManager = nil;
         }
         
         if (iterations) {
-            [self execute:[NSString stringWithFormat:@"PRAGMA kdf_iter='%@';", iterations] error:NULL];
+            [self execute:[NSString stringWithFormat:@"PRAGMA kdf_iter='%d';", (int)iterations] error:NULL];
         }
                 
         unlocked = [self isDatabaseUnlocked];
@@ -244,8 +286,13 @@ static SQLCipherManager *sharedManager = nil;
     return unlocked;
 }
 
-- (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSString *)iterations {
-    return [self openDatabaseWithOptions:password cipher:cipher iterations:iterations withHMAC:self.useHMACPageProtection];
+- (BOOL)openDatabaseWithOptions:(NSString*)password
+                         cipher:(NSString*)cipher
+                     iterations:(NSInteger)iterations {
+    return [self openDatabaseWithOptions:password
+                                  cipher:cipher
+                              iterations:iterations
+                                withHMAC:self.useHMACPageProtection];
 }
 
 - (BOOL)rekeyDatabaseWithPassword:(NSString *)password {
@@ -254,7 +301,7 @@ static SQLCipherManager *sharedManager = nil;
 
 - (BOOL)rekeyDatabaseWithOptions:(NSString*)password 
                           cipher:(NSString*)cipher 
-                      iterations:(NSString *)iterations 
+                      iterations:(NSInteger)iterations
                            error:(NSError **)error {
     if (delegate && [delegate respondsToSelector:@selector(sqlCipherManagerWillRekeyDatabase)])
         [delegate sqlCipherManagerWillRekeyDatabase];
@@ -323,9 +370,9 @@ static SQLCipherManager *sharedManager = nil;
 	}
 	
 	// 2.b rekey kdf_iter
-	if (failed == NO && iterations != nil) {
-		DLog(@"setting new kdf_iter: %@", iterations);
-        sql = [NSString stringWithFormat:@"PRAGMA rekey.kdf_iter='%@';", iterations];
+	if (failed == NO && iterations > 0) {
+		DLog(@"setting new kdf_iter: %d", (int)iterations);
+        sql = [NSString stringWithFormat:@"PRAGMA rekey.kdf_iter='%d';", (int)iterations];
         rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, NULL);
 		if (rc != SQLITE_OK) {
 			failed = YES;
@@ -381,7 +428,10 @@ static SQLCipherManager *sharedManager = nil;
         }
         
         // test that our new db works
-        if (!([self openDatabaseWithOptions:password cipher:cipher iterations:iterations withHMAC:self.useHMACPageProtection])) {
+        if (!([self openDatabaseWithOptions:password
+                                     cipher:cipher
+                                 iterations:iterations
+                                   withHMAC:self.useHMACPageProtection])) {
             failed = YES;
             *error = [SQLCipherManager errorUsingDatabase:@"Unable to open database after moving rekey into place" 
                                                    reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
