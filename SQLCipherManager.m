@@ -296,7 +296,7 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (BOOL)rekeyDatabaseWithPassword:(NSString *)password {
-	return [self rekeyDatabaseWithOptions:password cipher:nil iterations:nil error:NULL];
+	return [self rekeyDatabaseWithOptions:password cipher:nil iterations:self.kdfIterations error:NULL];
 }
 
 - (BOOL)rekeyDatabaseWithOptions:(NSString*)password 
