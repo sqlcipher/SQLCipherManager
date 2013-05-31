@@ -65,7 +65,7 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 - (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSInteger)iterations;
 - (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC;
 - (BOOL)openAndRekeyCFBDatabaseWithPassword:(NSString *)password __attribute__((deprecated));
-- (BOOL)rekeyDatabaseWithPassword:(NSString *)password __attribute__((deprecated));
+- (BOOL)rekeyDatabaseWithPassword:(NSString *)password;
 - (BOOL)rekeyDatabaseWithOptions:(NSString*)password 
                           cipher:(NSString*)cipher 
                       iterations:(NSInteger)iterations

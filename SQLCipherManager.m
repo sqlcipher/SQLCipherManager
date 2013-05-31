@@ -157,60 +157,11 @@ static SQLCipherManager *sharedManager = nil;
 
 - (BOOL)openDatabaseWithPassword:(NSString *)password {
 	BOOL unlocked = NO;
-    NSError *error;
-    
-    // open with default options and current settings
-    DLog(@"attempting to open in CBC mode, with %d iterations, HMAC enabled: %d", (int)self.kdfIterations, self.useHMACPageProtection);
     unlocked = [self openDatabaseWithOptions: password
                                       cipher: @"aes-256-cbc"
                                   iterations: self.kdfIterations
                                     withHMAC: self.useHMACPageProtection];
-    if (unlocked == NO) {
-        // try it with 4000 iterations for older databases
-        unlocked = [self openDatabaseWithOptions: password
-                                          cipher: @"aes-256-cbc"
-                                      iterations: 4000
-                                        withHMAC: self.useHMACPageProtection];
-        if (unlocked) {
-            // upgrade to 40000 via re-key...
-            DLog(@"initiating re-key to new settings");
-            unlocked = [self rekeyDatabaseWithOptions: password
-                                               cipher: @"aes-256-cbc"
-                                           iterations: self.kdfIterations
-                                                error: &error];
-            if (unlocked == NO && error) {
-                DLog(@"error re-keying database: %@", error);
-            }
-            
-        } else {
-            // if HMAC was turned on, try it without and re-key if it works
-            if (self.useHMACPageProtection == YES) {
-                unlocked = [self openDatabaseWithOptions: password
-                                                  cipher: @"aes-256-cbc"
-                                              iterations: 4000
-                                                withHMAC: NO];
-                
-                if (unlocked == YES) {
-                    DLog(@"initiating re-key to new settings");
-                    unlocked = [self rekeyDatabaseWithOptions: password
-                                                       cipher: @"aes-256-cbc"
-                                                   iterations: self.kdfIterations
-                                                        error: &error];
-                    if (unlocked == NO && error) {
-                        DLog(@"error re-keying database: %@", error);
-                    }
-                } else {
-                    // try the legacy database settings
-                    unlocked = [self openAndRekeyCFBDatabaseWithPassword:password];
-                }
-            } else {
-                // try the legacy database settings
-                unlocked = [self openAndRekeyCFBDatabaseWithPassword:password];
-            }
-        }
-    }
-	
-	return unlocked;
+    return unlocked;
 }
 
 - (BOOL)openAndRekeyCFBDatabaseWithPassword:(NSString *)password {
@@ -235,7 +186,10 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (BOOL)openDatabaseWithCachedPassword {
-	return [self openDatabaseWithPassword:self.cachedPassword];
+    return [self openDatabaseWithOptions: self.cachedPassword
+                                  cipher: @"aes-256-cbc"
+                              iterations: self.kdfIterations
+                                withHMAC: YES];
 }
 
 - (BOOL)openDatabaseWithOptions:(NSString*)password
