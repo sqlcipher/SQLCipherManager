@@ -146,13 +146,8 @@ static SQLCipherManager *sharedManager = nil;
 # pragma mark Open, Create, Re-Key and Close Tasks
 
 - (void)createDatabaseWithPassword:(NSString *)password {
-	if ([self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:self.kdfIterations withHMAC:self.useHMACPageProtection]) {
-		self.cachedPassword = password;
-		if (self.delegate && [self.delegate respondsToSelector:@selector(didCreateDatabase)]) {
-			DLog(@"Calling delegate now that db has been created.");
-			[self.delegate didCreateDatabase];
-		}
-	}
+    // just a pass-through, really
+	[self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:self.kdfIterations withHMAC:self.useHMACPageProtection];
 }
 
 - (BOOL)openDatabaseWithPassword:(NSString *)password {
@@ -197,6 +192,10 @@ static SQLCipherManager *sharedManager = nil;
                      iterations:(NSInteger)iterations
                        withHMAC:(BOOL)useHMAC {
     BOOL unlocked = NO;
+    BOOL newDatabase = NO;
+    if ([self databaseExists] == NO) {
+        newDatabase = YES;
+    }
     if (sqlite3_open([[self pathToDatabase] UTF8String], &database) == SQLITE_OK) {
         
         // HMAC page protection is enabled by default in SQLCipher 2.0
@@ -225,8 +224,14 @@ static SQLCipherManager *sharedManager = nil;
         } else {
             self.cachedPassword = password;
             DLog(@"Calling delegate now that DB is open.");
-            if (self.delegate && [self.delegate respondsToSelector:@selector(didOpenDatabase)]) {
-                [self.delegate didOpenDatabase];
+            if (newDatabase == YES) {
+                if (self.delegate && [self.delegate respondsToSelector:@selector(didCreateDatabase)]) {
+                    [self.delegate didCreateDatabase];
+                }
+            } else {
+                if (self.delegate && [self.delegate respondsToSelector:@selector(didOpenDatabase)]) {
+                    [self.delegate didOpenDatabase];
+                }
             }
         }
     } else {
