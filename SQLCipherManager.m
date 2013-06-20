@@ -37,7 +37,7 @@ static SQLCipherManager *sharedManager = nil;
     self = [super init];
     if (self) {
         _useHMACPageProtection  = YES;
-        _kdfIterations          = 40000;
+        _kdfIterations          = 64000;
     }
     return self;
 }
