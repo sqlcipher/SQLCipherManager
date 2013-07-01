@@ -664,7 +664,7 @@ static SQLCipherManager *sharedManager = nil;
 
 - (NSString *)getScalarWith:(NSString*)query {
 	sqlite3_stmt *stmt;
-	NSString *scalar;
+	NSString *scalar = nil;
     int rc = 0;
     rc = sqlite3_prepare_v2(database, [query UTF8String], -1, &stmt, NULL);
 	if (rc == SQLITE_OK) {
