@@ -15,6 +15,11 @@
 		0867D69BFE84028FC02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		136DF18A10F26A3A000DDCA7 /* SQLCipherManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SQLCipherManager.h; sourceTree = "<group>"; };
 		136DF18B10F26A3A000DDCA7 /* SQLCipherManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SQLCipherManager.m; sourceTree = "<group>"; };
+		2860AB82159387D1001CBD5F /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
+		2860AB84159387D1001CBD5F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
+		2860AB87159387D1001CBD5F /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		2860AB88159387D1001CBD5F /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
+		2860AB89159387D1001CBD5F /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		32DBCF5E0370ADEE00C91783 /* SQLCipherManager_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SQLCipherManager_Prefix.pch; sourceTree = "<group>"; };
 		D2AAC07E0554694100DB518D /* libSQLCipherManager.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSQLCipherManager.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -44,6 +49,7 @@
 				08FB77AEFE84172EC02AAC07 /* Classes */,
 				32C88DFF0371C24200C91783 /* Other Sources */,
 				0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */,
+				2860AB81159387D1001CBD5F /* Frameworks */,
 				034768DFFF38A50411DB9C8B /* Products */,
 			);
 			name = SQLCipherManager;
@@ -78,6 +84,26 @@
 		1058C7B2FEA5585E11CA2CBB /* Other Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+			);
+			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+		2860AB81159387D1001CBD5F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				2860AB82159387D1001CBD5F /* SenTestingKit.framework */,
+				2860AB84159387D1001CBD5F /* Cocoa.framework */,
+				2860AB86159387D1001CBD5F /* Other Frameworks */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		2860AB86159387D1001CBD5F /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				2860AB87159387D1001CBD5F /* AppKit.framework */,
+				2860AB88159387D1001CBD5F /* CoreData.framework */,
+				2860AB89159387D1001CBD5F /* Foundation.framework */,
 			);
 			name = "Other Frameworks";
 			sourceTree = "<group>";
@@ -138,6 +164,7 @@
 				Japanese,
 				French,
 				German,
+				en,
 			);
 			mainGroup = 0867D691FE84028FC02AAC07 /* SQLCipherManager */;
 			productRefGroup = 034768DFFF38A50411DB9C8B /* Products */;
@@ -174,8 +201,8 @@
 				GCC_PREFIX_HEADER = SQLCipherManager_Prefix.pch;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
-					../sqlcipher,
-					"$(OPENSSL_SRC)/include",
+					"../../sqlcipher-static-ios/include",
+					"../../sqlcipher-static-osx/include",
 				);
 				INSTALL_PATH = /usr/local/lib;
 				OTHER_CFLAGS = (
@@ -198,8 +225,8 @@
 				GCC_PREFIX_HEADER = SQLCipherManager_Prefix.pch;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
-					../sqlcipher,
-					"$(OPENSSL_SRC)/include",
+					"../../sqlcipher-static-ios/include",
+					"../../sqlcipher-static-osx/include",
 				);
 				INSTALL_PATH = /usr/local/lib;
 				OTHER_CFLAGS = (
@@ -228,6 +255,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = "";
 				SDKROOT = "$(PLATFORM_NAME)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphonesimulator macosx iphoneos";

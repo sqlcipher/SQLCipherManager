@@ -32,7 +32,6 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 	id delegate;
 	NSString *cachedPassword;
     BOOL _useHMACPageProtection;
-    BOOL _upgradeToHMACPageProtection;
 @private
     NSURL *_databaseUrl;
 }
@@ -45,11 +44,13 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 @property (nonatomic, retain) NSString *databasePath;
 @property (nonatomic, retain) NSURL *databaseUrl;
 @property (nonatomic) BOOL useHMACPageProtection;
-@property (nonatomic) BOOL upgradeToHMACPageProtection;
+@property (nonatomic) NSInteger schemaVersion;
+@property (nonatomic, readonly) BOOL isDatabaseUnlocked;
 
 - (id)initWithURL:(NSURL *)absoluteUrl;
 - (id)initWithPath:(NSString *)path; // DEPRECATED
 + (id)sharedManager;
++ (void)setSharedManager:(SQLCipherManager *)manager;
 
 + (BOOL)passwordIsValid:(NSString *)password;
 
@@ -60,6 +61,8 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 - (BOOL)openDatabaseWithPassword:(NSString *)password;
 - (BOOL)openDatabaseWithCachedPassword;
 - (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSString *)iterations;
+- (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSString *)iterations withHMAC:(BOOL)useHMAC;
+- (BOOL)openAndRekeyCFBDatabaseWithPassword:(NSString *)password;
 - (BOOL)rekeyDatabaseWithPassword:(NSString *)password;
 - (BOOL)rekeyDatabaseWithOptions:(NSString*)password 
                           cipher:(NSString*)cipher 
@@ -67,7 +70,6 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
                            error:(NSError **)error;
 - (void)closeDatabase;
 - (void)reallyCloseDatabase;
-- (BOOL)isDatabaseUnlocked;
 - (BOOL)reopenDatabase:(NSError **)error;
 
 // Backup and File Location methods
@@ -83,12 +85,12 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 - (BOOL)copyDatabaseToPath:(NSString *)path error:(NSError **)error;
 
 // Schema methods
-- (NSInteger)getSchemaVersion;
-- (void)setSchemaVersion:(NSInteger)version;
+- (NSInteger)getSchemaVersion; // DEPRECATED, use schemaVersion dynamic property
 
 // Query / Transaction methods
 - (void)execute:(NSString *)sqlCommand; // throws an NSException on command failure
 - (BOOL)execute:(NSString *)sqlCommand error:(NSError **)error;
+- (void)execute:(NSString *)query withBlock:(void (^)(sqlite3_stmt *stmt))block;
 - (void)beginTransaction;
 - (void)commitTransaction;
 - (void)rollbackTransaction;

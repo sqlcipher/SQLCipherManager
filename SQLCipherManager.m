@@ -27,13 +27,15 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 @synthesize databaseUrl=_databaseUrl;
 @dynamic databasePath;
 @synthesize useHMACPageProtection=_useHMACPageProtection;
-@synthesize upgradeToHMACPageProtection=_upgradeToHMACPageProtection;
+@dynamic schemaVersion;
+@dynamic isDatabaseUnlocked;
+
+static SQLCipherManager *sharedManager = nil;
 
 - (id)init {
     self = [super init];
     if (self) {
         _useHMACPageProtection       = YES;
-        _upgradeToHMACPageProtection = NO;
     }
     return self;
 }
@@ -109,14 +111,14 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 	return [NSError errorWithDomain:SQLCipherManagerErrorDomain code:ERR_SQLCIPHER_COMMAND_FAILED userInfo:userInfo]; 
 }
 
-+ (id)sharedManager
-{
-	// static var is initialized at compile time
-	static SQLCipherManager *sharedManager = nil;
-	
++ (id)sharedManager {	
 	if(!sharedManager)
 		sharedManager = [[self alloc] init];
 	return sharedManager;
+}
+
++ (void)setSharedManager:(SQLCipherManager *)manager {
+  sharedManager = manager;
 }
 
 + (BOOL)passwordIsValid:(NSString *)password  {
@@ -142,7 +144,7 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 # pragma mark Open, Create, Re-Key and Close Tasks
 
 - (void)createDatabaseWithPassword:(NSString *)password {
-	if ([self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"10000"]) {
+	if ([self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000" withHMAC:self.useHMACPageProtection]) {
 		self.cachedPassword = password;
 		if (self.delegate && [self.delegate respondsToSelector:@selector(didCreateDatabase)]) {
 			DLog(@"Calling delegate now that db has been created.");
@@ -154,33 +156,26 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 - (BOOL)openDatabaseWithPassword:(NSString *)password {
 	BOOL unlocked = NO;
     NSError *error;
-    // open with CBC, 10,000 iterations
-    DLog(@"attempting to open in CBC mode, with 10,000 iterations");
-    if (!(unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"10000"])) {
-        // indicate to openDatabaseWithOptions: that it will have to disable HMAC
-        // allowing our rekey afterwards to enable HMAC on the new db
-        self.upgradeToHMACPageProtection = YES;
-        DLog(@"attempting to open in CBC mode, with 4,000 iterations");
-        if ((unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000"])) {
-            DLog(@"initiating re-key to new settings");
-            unlocked = [self rekeyDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"10000" error:&error];
-            if (!unlocked && error) {
-                DLog(@"error re-keying database: %@", error);
-            }
-        }
-        else {
-            // try the original settings, CFB, 4,000 iterations, and re-key
-            DLog(@"attempting to open in CFB mode, with 4,000 iterations");
-            if ((unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cfb" iterations:@"4000"])) {
+    
+    // open with default options
+    DLog(@"attempting to open in CBC mode, with 4,000 iterations, HMAC enabled: %d", self.useHMACPageProtection);
+    if (!(unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000" withHMAC:self.useHMACPageProtection])) {
+        // if HMAC was turned on, try it without and re-key if it works
+        if (self.useHMACPageProtection) {
+            if ((unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000" withHMAC:NO])) {
                 DLog(@"initiating re-key to new settings");
-                unlocked = [self rekeyDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"10000" error:&error];
+                unlocked = [self rekeyDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000" error:&error];
                 if (!unlocked && error) {
                     DLog(@"error re-keying database: %@", error);
                 }
+            } else {
+                // try the legacy database settings
+                unlocked = [self openAndRekeyCFBDatabaseWithPassword:password];
             }
+        } else {
+            // try the legacy database settings
+            unlocked = [self openAndRekeyCFBDatabaseWithPassword:password];
         }
-        // ensure that this is off, so we no longer try to open the DB with hmac page protection
-        self.upgradeToHMACPageProtection = NO;
     }
 	
 	// if unlocked, check to see if there's any needed schema updates
@@ -197,36 +192,48 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 	return unlocked;
 }
 
+- (BOOL)openAndRekeyCFBDatabaseWithPassword:(NSString *)password {
+    BOOL unlocked = NO;
+    NSError *error;
+    DLog(@"attempting to open in CFB mode, with 4,000 iterations");
+    if ((unlocked = [self openDatabaseWithOptions:password cipher:@"aes-256-cfb" iterations:@"4000"])) {
+        DLog(@"initiating re-key to new settings");
+        unlocked = [self rekeyDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:@"4000" error:&error];
+        if (!unlocked && error) {
+            DLog(@"error re-keying database: %@", error);
+        }
+    }
+    return unlocked;
+}
+
 - (BOOL)openDatabaseWithCachedPassword {
 	return [self openDatabaseWithPassword:self.cachedPassword];
 }
 
-- (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSString *)iterations {
+- (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSString *)iterations withHMAC:(BOOL)useHMAC {
     BOOL unlocked = NO;
     if (sqlite3_open([[self pathToDatabase] UTF8String], &database) == SQLITE_OK) {
+        
+        // HMAC page protection is enabled by default in SQLCipher 2.0
+        if (useHMAC == NO) {
+            DLog(@"HMAC page protection has been disabled");
+            [self execute:@"PRAGMA cipher_default_use_hmac = OFF;" error:NULL];
+        } else {
+            [self execute:@"PRAGMA cipher_default_use_hmac = ON;" error:NULL];
+        }
         
         // submit the password
         const char *key = [password UTF8String];
         sqlite3_key(database, key, strlen(key));
-
+        
         if (cipher) {
             [self execute:[NSString stringWithFormat:@"PRAGMA cipher='%@';", cipher] error:NULL];
         }
-
+        
         if (iterations) {
             [self execute:[NSString stringWithFormat:@"PRAGMA kdf_iter='%@';", iterations] error:NULL];
         }
-        
-        // make sure to turn off HMAC now if the application doesn't want it (e.g. isn't ready for SQLCipher 2.0)
-        if (_useHMACPageProtection == NO) {
-            DLog(@"HMAC page protection has been disabled");
-            [self execute:@"PRAGMA cipher_default_use_hmac = OFF;" error:NULL];
-        }
-        // if we're planning to upgrade a legacy DB, we need to temporarily disable HMAC when we open it
-        if (_upgradeToHMACPageProtection == YES) {
-            [self execute:@"PRAGMA cipher_use_hmac = OFF;" error: NULL];
-        }
-
+                
         unlocked = [self isDatabaseUnlocked];
         if (!unlocked) {
             sqlite3_close(database);
@@ -235,6 +242,10 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
         NSAssert1(0, @"Unable to open database file '%s'", sqlite3_errmsg(database));
     }
     return unlocked;
+}
+
+- (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSString *)iterations {
+    return [self openDatabaseWithOptions:password cipher:cipher iterations:iterations withHMAC:self.useHMACPageProtection];
 }
 
 - (BOOL)rekeyDatabaseWithPassword:(NSString *)password {
@@ -250,6 +261,16 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
     
     NSFileManager *fm = [NSFileManager defaultManager];
     BOOL failed = NO; // used to track whether any sqlcipher operations have yet failed
+    
+    // if HMAC page protection should be on (e.g. we're doing an upgrade), make it so:
+    if (self.useHMACPageProtection) {
+        DLog(@"Ensuring HMAC page protection is on by default for re-key");
+        [self execute:@"PRAGMA cipher_default_use_hmac = ON;" error:NULL];
+    } else {
+        // otherwise, better turn it off for this operation, caller may be looking
+        // to create another non-HMAC database
+        [self execute:@"PRAGMA cipher_default_use_hmac = OFF;" error:NULL];
+    }
     
 	// 1. backup current db file
     BOOL copied = [self createRollbackDatabase:error];
@@ -271,18 +292,21 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
     if (password != nil) {
         sql = [NSString stringWithFormat:@"ATTACH DATABASE '%@' AS rekey KEY '%@';", 
                [self pathToRekeyDatabase], 
-               password];
+               [password stringByReplacingOccurrencesOfString:@"'" withString:@"''"]];
     }
     else {
         // The current key will be used by ATTACH
         sql = [NSString stringWithFormat:@"ATTACH DATABASE '%@' AS rekey;", [self pathToRekeyDatabase]];
     }
-    int rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, NULL);
+    char *errorPointer;
+    int rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, &errorPointer);
     if (rc != SQLITE_OK) {
         failed = YES;
         // setup the error object
+        NSString *errMsg = [NSString stringWithCString:errorPointer encoding:NSUTF8StringEncoding];
         *error = [SQLCipherManager errorUsingDatabase:@"Unable to attach rekey database" 
-                                               reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+                                               reason:errMsg];
+        sqlite3_free(errorPointer);
     }
     
 	// 2.a rekey cipher
@@ -324,7 +348,7 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
         }
         // we need to update the user version, too
         NSInteger version = [self getSchemaVersion];
-        sql = [NSString stringWithFormat:@"PRAGMA rekey.user_version = %d", version];
+        sql = [NSString stringWithFormat:@"PRAGMA rekey.user_version = %ld", version];
         rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, NULL);
         if (rc != SQLITE_OK) {
             failed = YES;
@@ -356,15 +380,8 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
             failed = YES;
         }
         
-        // before we call open again, we should disable the use of cipher_use_hmac = OFF; so the new DB has HMAC.
-        // if the caller does not want that, he can set self.useHMACPageProtection = NO and cipher_default_use_hmac
-        // will be used.
-        if (self.upgradeToHMACPageProtection) {
-            self.upgradeToHMACPageProtection = NO;
-        }
-        
         // test that our new db works
-        if (!([self openDatabaseWithOptions:password cipher:cipher iterations:iterations] && [self isDatabaseUnlocked])) {
+        if (!([self openDatabaseWithOptions:password cipher:cipher iterations:iterations withHMAC:self.useHMACPageProtection])) {
             failed = YES;
             *error = [SQLCipherManager errorUsingDatabase:@"Unable to open database after moving rekey into place" 
                                                    reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
@@ -537,13 +554,13 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 		DLog(@"file already exists at this path, removing...");
 		BOOL removed = [fm removeItemAtPath:path error:error];
 		if (removed == NO) {
-			DLog(@"unable to remove old version of backup database: %@", error);
+			DLog(@"unable to remove old version of backup database: %@", *error);
 			return NO;
 		}
 	}
     BOOL copied = [fm copyItemAtPath:[self pathToDatabase] toPath:path error:error];
 	if (copied == NO) {		
-		NSLog(@"could not copy database to path %@: %@", path, error);
+		NSLog(@"could not copy database to path %@: %@", path, *error);
 		return NO;
 	}
     return YES;
@@ -553,13 +570,17 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 #pragma mark Schema methods
 
 - (NSInteger)getSchemaVersion {
+    return self.schemaVersion;
+}
+
+- (NSInteger)schemaVersion {
     NSString *scalar = [self getScalarWith:@"PRAGMA user_version;"];
     return [scalar integerValue];
 }
 
 - (void)setSchemaVersion:(NSInteger)newVersion {
-	NSAssert1(newVersion >= 0, @"New version %d is less than zero, only signed integers allowed", newVersion);
-    NSString *sql = [NSString stringWithFormat:@"PRAGMA user_version = '%d';", newVersion];
+	NSAssert1(newVersion >= 0, @"New version %ld is less than zero, only signed integers allowed", newVersion);
+    NSString *sql = [NSString stringWithFormat:@"PRAGMA user_version = '%ld';", newVersion];
     [self execute:sql];
 }
 
@@ -619,6 +640,24 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 	return YES;
 }
 
+/* FIXME: this should throw (or return from block) an NSException, or an NSError pointer, not NSAssert (crash) */
+- (void)execute:(NSString *)query withBlock:(void (^)(sqlite3_stmt *stmt))block
+{
+	sqlite3_stmt *stmt;
+	if (sqlite3_prepare_v2(database, [query UTF8String], -1, &stmt, NULL) == SQLITE_OK) 
+	{
+		while (sqlite3_step(stmt) == SQLITE_ROW)
+		{
+			block(stmt);
+		}
+	}
+	else {
+		NSAssert1(0, @"Unable to prepare query '%s'", sqlite3_errmsg(database));
+	}
+	sqlite3_finalize(stmt);
+	return;
+}
+
 - (NSString *)getScalarWith:(NSString*)query {
 	sqlite3_stmt *stmt;
 	NSString *scalar = nil;
@@ -653,16 +692,8 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 }
 
 - (NSInteger)countForSQL:(NSString *)countSQL {
-	NSInteger count = 0;
-	sqlite3_stmt *stmt;
-	if (sqlite3_prepare_v2(database, [countSQL UTF8String], -1, &stmt, NULL) == SQLITE_OK) {
-		if (sqlite3_step(stmt) == SQLITE_ROW) {
-			count = sqlite3_column_int(stmt, 0);
-		} // else is still zero
-	} else {
-		NSAssert1(0, @"Unable to prepare query '%s'", sqlite3_errmsg(database));
-	}
-	sqlite3_finalize(stmt);
+    NSString *scalar = [self getScalarWith:countSQL];
+    NSInteger count = [scalar integerValue];
 	return count;
 }
 
