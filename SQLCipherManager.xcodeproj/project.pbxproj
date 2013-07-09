@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		136DF18C10F26A3A000DDCA7 /* SQLCipherManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 136DF18A10F26A3A000DDCA7 /* SQLCipherManager.h */; };
 		136DF18D10F26A3A000DDCA7 /* SQLCipherManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 136DF18B10F26A3A000DDCA7 /* SQLCipherManager.m */; };
+		28E7CB3E178C8E7400E02267 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 28E7CB3D178C8E7400E02267 /* Foundation.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,6 +21,7 @@
 		2860AB87159387D1001CBD5F /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		2860AB88159387D1001CBD5F /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		2860AB89159387D1001CBD5F /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		28E7CB3D178C8E7400E02267 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		32DBCF5E0370ADEE00C91783 /* SQLCipherManager_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SQLCipherManager_Prefix.pch; sourceTree = "<group>"; };
 		D2AAC07E0554694100DB518D /* libSQLCipherManager.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSQLCipherManager.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -29,6 +31,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				28E7CB3E178C8E7400E02267 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -46,6 +49,7 @@
 		0867D691FE84028FC02AAC07 /* SQLCipherManager */ = {
 			isa = PBXGroup;
 			children = (
+				28E7CB3D178C8E7400E02267 /* Foundation.framework */,
 				08FB77AEFE84172EC02AAC07 /* Classes */,
 				32C88DFF0371C24200C91783 /* Other Sources */,
 				0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */,
