@@ -87,7 +87,7 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 - (BOOL)copyDatabaseToPath:(NSString *)path error:(NSError **)error;
 
 // Schema methods
-- (NSInteger)getSchemaVersion; // DEPRECATED, use schemaVersion dynamic property
+- (NSInteger)getSchemaVersion __attribute__((deprecated)); // DEPRECATED, use schemaVersion dynamic property
 
 // Query / Transaction methods
 - (void)execute:(NSString *)sqlCommand; // throws an NSException on command failure

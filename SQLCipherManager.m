@@ -348,7 +348,7 @@ static SQLCipherManager *sharedManager = nil;
                                                    reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
         }
         // we need to update the user version, too
-        NSInteger version = [self getSchemaVersion];
+        NSInteger version = self.schemaVersion;
         sql = [NSString stringWithFormat:@"PRAGMA rekey.user_version = %d;", (int)version];
         rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, NULL);
         if (rc != SQLITE_OK) {
