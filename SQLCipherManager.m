@@ -250,7 +250,7 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (BOOL)rekeyDatabaseWithPassword:(NSString *)password {
-	return [self rekeyDatabaseWithOptions:password cipher:nil iterations:self.kdfIterations error:NULL];
+	return [self rekeyDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:self.kdfIterations error:NULL];
 }
 
 - (BOOL)rekeyDatabaseWithOptions:(NSString*)password 
