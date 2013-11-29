@@ -133,13 +133,15 @@ static SQLCipherManager *sharedManager = nil;
 	return YES; // all clear!
 }
 
-- (void) setCachedPassword:(NSString *)password {
-	[password retain];
-	if(cachedPassword) {
-		memset((void *)[cachedPassword UTF8String], 0, [cachedPassword length]);
-	}
-	[cachedPassword release];
-	cachedPassword = password;
+- (void)setCachedPassword:(NSString *)password {
+    if (cachedPassword != password) {
+        NSString *mutableCopy = [password mutableCopy];
+        if (cachedPassword != nil) {
+            memset((void *)[cachedPassword UTF8String], 0, [cachedPassword length]);
+        }
+        [cachedPassword release];
+        cachedPassword = mutableCopy;
+    }
 }
 
 # pragma mark -
@@ -209,19 +211,18 @@ static SQLCipherManager *sharedManager = nil;
         // submit the password
         const char *key = [password UTF8String];
         sqlite3_key(database, key, strlen(key));
-        
+        // both cipher and kdf_iter must be specified AFTER key
         if (cipher) {
             [self execute:[NSString stringWithFormat:@"PRAGMA cipher='%@';", cipher] error:NULL];
         }
-        
         if (iterations) {
             [self execute:[NSString stringWithFormat:@"PRAGMA kdf_iter='%d';", (int)iterations] error:NULL];
         }
-                
         unlocked = [self isDatabaseUnlocked];
         if (unlocked == NO) {
             sqlite3_close(database);
         } else {
+            DLog(@"Updating cached password");
             self.cachedPassword = password;
             DLog(@"Calling delegate now that DB is open.");
             if (newDatabase == YES) {
