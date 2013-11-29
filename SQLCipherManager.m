@@ -619,6 +619,25 @@ static SQLCipherManager *sharedManager = nil;
 	}
 }
 
+- (void)transactionWithBlock:(void(^)(void))block {
+    BOOL outerTransaction = [self inTransaction];
+    if (outerTransaction == NO) {
+        [self beginTransaction];
+    }
+    @try {
+        block();
+        if (outerTransaction == NO) {
+            [self commitTransaction];
+        }
+    }
+    @catch (NSException *exception) {
+        if (outerTransaction == NO) {
+            [self rollbackTransaction];
+        }
+        @throw exception;
+    }
+}
+
 - (void)execute:(NSString *)sqlCommand {
     NSError *error;
     if ([self execute:sqlCommand error:&error] != YES) 

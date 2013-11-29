@@ -96,6 +96,7 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 - (void)beginTransaction;
 - (void)commitTransaction;
 - (void)rollbackTransaction;
+- (void)transactionWithBlock:(void(^)(void))block;
 - (NSString *)getScalarWith:(NSString *)query;
 - (NSInteger)countForSQL:(NSString *)countSQL;
 - (NSInteger)countForTable:(NSString *)tableName;
