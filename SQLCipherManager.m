@@ -498,11 +498,14 @@ static SQLCipherManager *sharedManager = nil;
 - (BOOL)restoreDatabaseFromRollback:(NSError **)error {
 	BOOL success = [self restoreDatabaseFromFileAtPath:[self pathToRollbackDatabase] error:error];
 	if (success) {
-		// remove rollback file
-		NSFileManager *fm = [NSFileManager defaultManager];
-		[fm removeItemAtPath:[self pathToRollbackDatabase] error:error];
+		success = [self removeRollbackDatabase:error];
 	}
 	return success;
+}
+
+- (BOOL)removeRollbackDatabase:(NSError **)error {
+    NSFileManager *fm = [NSFileManager defaultManager];
+    return [fm removeItemAtPath:[self pathToRollbackDatabase] error:error];
 }
 
 - (BOOL)restoreDatabaseFromFileAtPath:(NSString *)path error:(NSError **)error {

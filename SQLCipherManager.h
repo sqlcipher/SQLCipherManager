@@ -81,6 +81,7 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 - (NSString *)pathToRollbackDatabase;
 - (NSString *)pathToRekeyDatabase;
 - (BOOL)restoreDatabaseFromRollback:(NSError **)error;
+- (BOOL)removeRollbackDatabase:(NSError **)error;
 - (BOOL)restoreDatabaseFromFileAtPath:(NSString *)path error:(NSError **)error;
 - (BOOL)createReplicaAtPath:(NSString *)path;
 - (BOOL)createRollbackDatabase:(NSError **)error;
