@@ -210,7 +210,7 @@ static SQLCipherManager *sharedManager = nil;
         
         // submit the password
         const char *key = [password UTF8String];
-        sqlite3_key(database, key, strlen(key));
+        sqlite3_key(database, key, (int)strlen(key));
         // both cipher and kdf_iter must be specified AFTER key
         if (cipher) {
             [self execute:[NSString stringWithFormat:@"PRAGMA cipher='%@';", cipher] error:NULL];
@@ -538,7 +538,7 @@ static SQLCipherManager *sharedManager = nil;
 	if (sqlite3_open([path UTF8String], &replica) == SQLITE_OK) {
 		// initialize it with the cached password
 		const char *key = [self.cachedPassword UTF8String];
-		sqlite3_key(replica, key, strlen(key));
+		sqlite3_key(replica, key, (int)strlen(key));
 		// do a quick check to make sure it took
 		if (sqlite3_exec(replica, "SELECT count(*) FROM sqlite_master;", NULL, NULL, NULL) == SQLITE_OK) {
 			success = YES;
