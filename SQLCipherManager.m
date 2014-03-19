@@ -35,44 +35,40 @@ static SQLCipherManager *sharedManager = nil;
 
 - (id)init {
     self = [super init];
-    if (self) {
+    if (self != nil) {
         _useHMACPageProtection  = YES;
         _kdfIterations          = 64000;
     }
     return self;
 }
 
-- (id)initWithURL:(NSURL *)absoluteUrl
-{
+- (id)initWithURL:(NSURL *)absoluteUrl {
     self = [self init];
-    if (self)
-    {
+    if (self != nil) {
         _databaseUrl = [absoluteUrl retain];
     }
     return self;
 }
 
-- (id)initWithPath:(NSString *)path
-{
+- (id)initWithPath:(NSString *)path {
     NSURL *absoluteURL = [[[NSURL alloc] initFileURLWithPath:path isDirectory:NO] autorelease];
     return [self initWithURL:absoluteURL];
 }
 
-- (void)setDatabasePath:(NSString *)databasePath
-{
+- (void)setDatabasePath:(NSString *)databasePath {
     NSURL *url = [[NSURL alloc] initFileURLWithPath:databasePath isDirectory:NO];
     [self setDatabaseUrl:url];
     [url release];
 }
 
-- (NSString *)databasePath
-{
+- (NSString *)databasePath {
     return [[self databaseUrl] path];
 }
 
 - (NSNumber *)databaseSize {
-	if (!_databaseUrl)
-		return nil;
+	if (_databaseUrl == nil) {
+        return nil;
+    }
 #if TARGET_OS_IPHONE
     NSError *error;
     NSFileManager *fm = [NSFileManager defaultManager];
@@ -93,19 +89,17 @@ static SQLCipherManager *sharedManager = nil;
     }
 }
 
-+ (NSError *)errorWithSQLitePointer:(char *)errorPointer
-{
++ (NSError *)errorWithSQLitePointer:(char *)errorPointer {
     NSString *errMsg = [NSString stringWithCString:errorPointer encoding:NSUTF8StringEncoding];
     NSString *description = @"An error occurred executing a SQL statement";
     NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:description, NSLocalizedDescriptionKey, errMsg, NSLocalizedFailureReasonErrorKey, nil];
-    return [[[NSError alloc] initWithDomain:SQLCipherManagerErrorDomain 
-                                       code:ERR_SQLCIPHER_COMMAND_FAILED 
-                                   userInfo:userInfo] 
+    return [[[NSError alloc] initWithDomain:SQLCipherManagerErrorDomain
+                                       code:ERR_SQLCIPHER_COMMAND_FAILED
+                                   userInfo:userInfo]
             autorelease];
 }
 
-+ (NSError *)errorUsingDatabase:(NSString *)problem reason:(NSString *)dbMessage
-{
++ (NSError *)errorUsingDatabase:(NSString *)problem reason:(NSString *)dbMessage {
 	NSString *failureReason = [NSString stringWithFormat:@"DB command failed: '%@'", dbMessage];
 	NSArray *objsArray = [NSArray arrayWithObjects: problem, failureReason, nil];
 	NSArray *keysArray = [NSArray arrayWithObjects: NSLocalizedDescriptionKey, NSLocalizedFailureReasonErrorKey, nil];
@@ -114,8 +108,9 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 + (id)sharedManager {	
-	if(!sharedManager)
-		sharedManager = [[self alloc] init];
+	if (sharedManager == nil) {
+        sharedManager = [[self alloc] init];
+    }
 	return sharedManager;
 }
 
@@ -124,12 +119,13 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 + (BOOL)passwordIsValid:(NSString *)password  {
-	if (password == nil)
-		return NO;
-	
+	if (password == nil) {
+        return NO;
+    }
 	// can't be blank a string, either
-	if ([[password stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]] length] <= 0)
-		return NO;
+	if ([[password stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]] length] <= 0) {
+        return NO;
+    }
 	return YES; // all clear!
 }
 
@@ -199,7 +195,6 @@ static SQLCipherManager *sharedManager = nil;
         newDatabase = YES;
     }
     if (sqlite3_open([[self pathToDatabase] UTF8String], &database) == SQLITE_OK) {
-        
         // HMAC page protection is enabled by default in SQLCipher 2.0
         if (useHMAC == NO) {
             DLog(@"HMAC page protection has been disabled");
@@ -207,7 +202,6 @@ static SQLCipherManager *sharedManager = nil;
         } else {
             [self execute:@"PRAGMA cipher_default_use_hmac = ON;" error:NULL];
         }
-        
         // submit the password
         const char *key = [password UTF8String];
         sqlite3_key(database, key, strlen(key));
@@ -263,7 +257,6 @@ static SQLCipherManager *sharedManager = nil;
     
     NSFileManager *fm = [NSFileManager defaultManager];
     BOOL failed = NO; // used to track whether any sqlcipher operations have yet failed
-    
     // if HMAC page protection should be on (e.g. we're doing an upgrade), make it so:
     if (self.useHMACPageProtection) {
         DLog(@"Ensuring HMAC page protection is on by default for re-key");
@@ -273,7 +266,6 @@ static SQLCipherManager *sharedManager = nil;
         // to create another non-HMAC database
         [self execute:@"PRAGMA cipher_default_use_hmac = OFF;" error:NULL];
     }
-    
 	// 1. backup current db file
     BOOL copied = [self createRollbackDatabase:error];
     if (copied == NO) {		
@@ -281,13 +273,11 @@ static SQLCipherManager *sharedManager = nil;
 		// halt immediatly, can't create a backup
 		return NO;
 	}
-    
     // make sure there's no older rekey database in the way here
     if ([fm fileExistsAtPath: [self pathToRekeyDatabase]]) {
         DLog(@"Removing older rekey database found on disk");
         [fm removeItemAtPath:[self pathToRekeyDatabase] error:error];
     }
-	
 	// 2. Attach a re-key database
     NSString *sql = nil;
     // Provide new KEY to ATTACH if not nil
@@ -310,7 +300,6 @@ static SQLCipherManager *sharedManager = nil;
                                                reason:errMsg];
         sqlite3_free(errorPointer);
     }
-    
 	// 2.a rekey cipher
 	if (cipher != nil) {
 		DLog(@"setting new cipher: %@", cipher);
@@ -323,7 +312,6 @@ static SQLCipherManager *sharedManager = nil;
 										 reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
 		}
 	}
-	
 	// 2.b rekey kdf_iter
 	if (failed == NO && iterations > 0) {
 		DLog(@"setting new kdf_iter: %d", (int)iterations);
@@ -336,7 +324,6 @@ static SQLCipherManager *sharedManager = nil;
 										 reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
 		}
 	}
-	
     // sqlcipher_export
 	if (failed == NO && password) {
 		DLog(@"exporting schema and data to rekey database");
@@ -359,7 +346,6 @@ static SQLCipherManager *sharedManager = nil;
                                                    reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
         }
 	}
-    
     // DETACH rekey database
     if (failed == NO) {
         sql = @"DETACH DATABASE rekey;";
@@ -371,28 +357,24 @@ static SQLCipherManager *sharedManager = nil;
                                                    reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
         }
     }
-	
     // move the new db into place
 	if (failed == NO) {
         // close our current handle to the original db
 		[self reallyCloseDatabase];
-        
         // move the rekey db into place
-        if (![self restoreDatabaseFromFileAtPath:[self pathToRekeyDatabase] error:error]) {
+        if ([self restoreDatabaseFromFileAtPath:[self pathToRekeyDatabase] error:error] == NO) {
             failed = YES;
         }
-        
         // test that our new db works
-        if (!([self openDatabaseWithOptions:password
+        if ([self openDatabaseWithOptions:password
                                      cipher:cipher
                                  iterations:iterations
-                                   withHMAC:self.useHMACPageProtection])) {
+                                   withHMAC:self.useHMACPageProtection] == NO) {
             failed = YES;
             *error = [SQLCipherManager errorUsingDatabase:@"Unable to open database after moving rekey into place" 
                                                    reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
         }
 	}
-	
 	// if there were no failures...
 	if (failed == NO) {
 		DLog(@"rekey tested successfully, removing backup file %@", [self pathToRollbackDatabase]);
@@ -410,15 +392,13 @@ static SQLCipherManager *sharedManager = nil;
 		// now this presents an interesting situation... need to let the application/delegate handle this, really
 		[delegate didEncounterRekeyError];		
 	}
-	
 	// if successful, update cached password
-	if (!failed) {
+	if (failed == NO) {
 		self.cachedPassword = password;
 	}
-    
-    if (delegate && [delegate respondsToSelector:@selector(sqlCipherManagerDidRekeyDatabase)])
+    if (delegate && [delegate respondsToSelector:@selector(sqlCipherManagerDidRekeyDatabase)]) {
         [delegate sqlCipherManagerDidRekeyDatabase];
-	
+    }
 	return (failed) ? NO : YES;
 }
 
@@ -440,7 +420,9 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (BOOL)isDatabaseUnlocked {
-	if (!database) return NO;
+	if (database == nil) {
+        return NO;
+    }
 	if (sqlite3_exec(database, "SELECT count(*) FROM sqlite_master;", NULL, NULL, NULL) == SQLITE_OK) {
 		return YES;
 	}
@@ -510,11 +492,9 @@ static SQLCipherManager *sharedManager = nil;
 	// get the db paths
 	NSString *dbPath = [self pathToDatabase];
 	NSString *backupPath = path; // argument from caller should be full path to file
-	
 	// insist that the two files be present
 	NSAssert1([fm fileExistsAtPath:dbPath], @"no db file at %@", dbPath);
 	NSAssert1([fm fileExistsAtPath:backupPath], @"no backup db file at %@", backupPath);
-	
 	// remove the original to make way for the backup
 	DLog(@"removing the file at the primary database path...");
 	if ([fm removeItemAtPath:dbPath error:error]) {
@@ -527,8 +507,7 @@ static SQLCipherManager *sharedManager = nil;
 	return NO;
 }
 
-- (BOOL)createReplicaAtPath:(NSString *)path
-{
+- (BOOL)createReplicaAtPath:(NSString *)path {
 	DLog(@"createReplicaAtPath: %@", path);
 	BOOL success = NO;
 	sqlite3 *replica = nil;
@@ -544,7 +523,6 @@ static SQLCipherManager *sharedManager = nil;
 	else {
 		NSAssert1(0, @"Failed to create replica '%s'", sqlite3_errmsg(replica));
 	}
-
 	return success;
 }
 
@@ -592,14 +570,14 @@ static SQLCipherManager *sharedManager = nil;
 # pragma mark -
 # pragma mark Transaction / Query methods
 - (void)beginTransaction {
-	if(!inTransaction) {
+	if (inTransaction == NO) {
 		[self execute:@"BEGIN;"];
 		inTransaction = YES;
 	}
 }
 
 - (void)commitTransaction {
-	if(inTransaction) {
+	if (inTransaction) {
 		NSError *error;
 		if ([self execute:@"COMMIT;" error:&error]) {
 			inTransaction = NO;
@@ -610,7 +588,7 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (void)rollbackTransaction {
-	if(inTransaction) {
+	if (inTransaction) {
 		NSError *error;
 		if ([self execute:@"ROLLBACK;" error:&error]) {
 			inTransaction = NO;
@@ -622,21 +600,17 @@ static SQLCipherManager *sharedManager = nil;
 
 - (void)execute:(NSString *)sqlCommand {
     NSError *error;
-    if ([self execute:sqlCommand error:&error] != YES) 
-    {
+    if ([self execute:sqlCommand error:&error] != YES) {
         NSException *e = [NSException exceptionWithName:SQLCipherManagerCommandException reason:[error localizedFailureReason] userInfo:[error userInfo]];
         @throw e;
     }
 }
 
-- (BOOL)execute:(NSString *)sqlCommand error:(NSError **)error
-{
+- (BOOL)execute:(NSString *)sqlCommand error:(NSError **)error {
 	const char *sql = [sqlCommand UTF8String];
 	char *errorPointer;
-	if (sqlite3_exec(database, sql, NULL, NULL, &errorPointer) != SQLITE_OK)
-	{
-		if (error)
-		{
+	if (sqlite3_exec(database, sql, NULL, NULL, &errorPointer) != SQLITE_OK) {
+		if (error != NULL) {
             *error = [[self class] errorWithSQLitePointer:errorPointer];
 			sqlite3_free(errorPointer);
 		}
@@ -646,53 +620,56 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 /* FIXME: this should throw (or return from block) an NSException, or an NSError pointer, not NSAssert (crash) */
-- (void)execute:(NSString *)query withBlock:(void (^)(sqlite3_stmt *stmt))block
-{
+- (void)execute:(NSString *)query withBlock:(void (^)(sqlite3_stmt *stmt))block {
 	sqlite3_stmt *stmt;
-	if (sqlite3_prepare_v2(database, [query UTF8String], -1, &stmt, NULL) == SQLITE_OK) 
-	{
-		while (sqlite3_step(stmt) == SQLITE_ROW)
-		{
-			block(stmt);
-		}
-	}
-	else {
-		NSAssert1(0, @"Unable to prepare query '%s'", sqlite3_errmsg(database));
-	}
-	sqlite3_finalize(stmt);
+    @try {
+        if (sqlite3_prepare_v2(database, [query UTF8String], -1, &stmt, NULL) == SQLITE_OK) {
+            while (sqlite3_step(stmt) == SQLITE_ROW) {
+                block(stmt);
+            }
+        }
+        else {
+            NSAssert1(0, @"Unable to prepare query '%s'", sqlite3_errmsg(database));
+        }
+    }
+    @finally {
+        sqlite3_finalize(stmt);
+    }
 	return;
 }
 
 - (NSString *)getScalarWith:(NSString*)query {
 	sqlite3_stmt *stmt;
-	NSString *scalar = nil;
-    int rc = 0;
-    rc = sqlite3_prepare_v2(database, [query UTF8String], -1, &stmt, NULL);
-	if (rc == SQLITE_OK) {
-        rc = sqlite3_step(stmt); 
-		if (rc == SQLITE_ROW) {
-			const unsigned char * cValue;
-			cValue = sqlite3_column_text(stmt, 0);
-			if (cValue) {
-				scalar = [NSString stringWithUTF8String:(char *) cValue];
-			}
-		} 
-	} else {
-        DLog(@"Error executing SQL: %@", query);
-        NSMutableDictionary *dict = [NSMutableDictionary dictionary];
-        [dict setObject:query forKey:SQLCipherManagerUserInfoQueryKey];
-        NSString *errorString = [NSString stringWithFormat:@"SQLite error %d: %s", sqlite3_errcode(database), sqlite3_errmsg(database)];
-        DLog(@"%@", errorString);
-        
-        if (inTransaction) {
-			NSLog(@"ROLLBACK");
-			[self rollbackTransaction];
-		}
-        
-        NSException *e = [NSException exceptionWithName:SQLCipherManagerCommandException reason:errorString userInfo:dict];
-        @throw e;
-	}
-	sqlite3_finalize(stmt);
+    NSString *scalar = nil;
+    @try {
+        int rc = 0;
+        rc = sqlite3_prepare_v2(database, [query UTF8String], -1, &stmt, NULL);
+        if (rc == SQLITE_OK) {
+            rc = sqlite3_step(stmt);
+            if (rc == SQLITE_ROW) {
+                const unsigned char * cValue;
+                cValue = sqlite3_column_text(stmt, 0);
+                if (cValue) {
+                    scalar = [NSString stringWithUTF8String:(char *) cValue];
+                }
+            }
+        } else {
+            DLog(@"Error executing SQL: %@", query);
+            NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+            [dict setObject:query forKey:SQLCipherManagerUserInfoQueryKey];
+            NSString *errorString = [NSString stringWithFormat:@"SQLite error %d: %s", sqlite3_errcode(database), sqlite3_errmsg(database)];
+            DLog(@"%@", errorString);
+            if (inTransaction) {
+                NSLog(@"ROLLBACK");
+                [self rollbackTransaction];
+            }
+            NSException *e = [NSException exceptionWithName:SQLCipherManagerCommandException reason:errorString userInfo:dict];
+            @throw e;
+        }
+    }
+    @finally {
+        sqlite3_finalize(stmt);
+    }
 	return scalar;
 }
 
