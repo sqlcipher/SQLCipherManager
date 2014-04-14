@@ -668,20 +668,21 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 /* FIXME: this should throw (or return from block) an NSException, or an NSError pointer, not NSAssert (crash) */
-- (void)execute:(NSString *)query withBlock:(void (^)(sqlite3_stmt *stmt))block
-{
+- (void)execute:(NSString *)query withBlock:(void (^)(sqlite3_stmt *stmt))block {
 	sqlite3_stmt *stmt;
-	if (sqlite3_prepare_v2(database, [query UTF8String], -1, &stmt, NULL) == SQLITE_OK) 
-	{
-		while (sqlite3_step(stmt) == SQLITE_ROW)
-		{
-			block(stmt);
-		}
-	}
-	else {
-		NSAssert1(0, @"Unable to prepare query '%s'", sqlite3_errmsg(database));
-	}
-	sqlite3_finalize(stmt);
+    @try {
+        if (sqlite3_prepare_v2(database, [query UTF8String], -1, &stmt, NULL) == SQLITE_OK) {
+            while (sqlite3_step(stmt) == SQLITE_ROW) {
+                block(stmt);
+            }
+        }
+        else {
+            NSAssert1(0, @"Unable to prepare query '%s'", sqlite3_errmsg(database));
+        }
+    }
+    @finally {
+        sqlite3_finalize(stmt);
+    }
 	return;
 }
 
