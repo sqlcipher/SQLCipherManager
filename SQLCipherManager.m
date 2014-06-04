@@ -107,7 +107,7 @@ static SQLCipherManager *sharedManager = nil;
 	return [NSError errorWithDomain:SQLCipherManagerErrorDomain code:ERR_SQLCIPHER_COMMAND_FAILED userInfo:userInfo]; 
 }
 
-+ (id)sharedManager {	
++ (id)sharedManager {
 	if (sharedManager == nil) {
         sharedManager = [[self alloc] init];
     }

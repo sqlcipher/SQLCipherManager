@@ -43,7 +43,7 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 
 @property (nonatomic, retain) NSString *cachedPassword;
 @property (nonatomic, retain) NSString *databasePath;
-@property (nonatomic, retain) NSURL *databaseUrl;
+@property (atomic,    retain) NSURL *databaseUrl;
 @property (nonatomic) BOOL useHMACPageProtection;
 @property (nonatomic) NSInteger schemaVersion;
 @property (nonatomic, readonly) BOOL isDatabaseUnlocked;
