@@ -660,6 +660,38 @@ static SQLCipherManager *sharedManager = nil;
 	return;
 }
 
+- (void)execute:(NSString *)sqlCommand withParams:(id)firstParam, ... {
+    id eachParam;
+    va_list argumentList;
+    sqlite3_stmt *stmt;
+    NSInteger idx = 0;
+    @try {
+        if (sqlite3_prepare_v2(database, [sqlCommand UTF8String], -1, &stmt, NULL) == SQLITE_OK) {
+            // if we have list of params, bind them.
+            if (firstParam) {
+                eachParam = firstParam;
+                va_start(argumentList, firstParam);
+                do {
+                    if ([eachParam isKindOfClass:[NSString class]]) {
+                        sqlite3_bind_text(stmt, (int)++idx, [eachParam UTF8String], -1, SQLITE_TRANSIENT);
+                    } else if ([eachParam isKindOfClass:[NSData class]]) {
+                        sqlite3_bind_blob(stmt, (int)++idx, [eachParam bytes], (int)[eachParam length], SQLITE_STATIC);
+                    } else { // assume this is an NSNumber int for now...
+                        // FIXME: add float/decimal support
+                        sqlite3_bind_int(stmt, (int)++idx, [eachParam intValue]);
+                    }
+                } while ((eachParam = va_arg(argumentList, id)));
+                va_end(argumentList);
+            }
+        } else {
+            NSAssert1(0, @"failed to prepare statement '%s'", sqlite3_errmsg(database));
+        }
+    }
+    @finally {
+        sqlite3_finalize(stmt);
+    }
+}
+
 - (NSString *)getScalarWith:(NSString*)query {
 	sqlite3_stmt *stmt;
     NSString *scalar = nil;

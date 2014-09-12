@@ -94,6 +94,7 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 - (void)execute:(NSString *)sqlCommand; // throws an NSException on command failure
 - (BOOL)execute:(NSString *)sqlCommand error:(NSError **)error;
 - (void)execute:(NSString *)query withBlock:(void (^)(sqlite3_stmt *stmt))block;
+- (void)execute:(NSString *)sqlCommand withParams:(id)firstParam, ...;
 - (void)beginTransaction;
 - (void)commitTransaction;
 - (void)rollbackTransaction;
