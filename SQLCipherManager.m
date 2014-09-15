@@ -17,7 +17,7 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 
 @interface SQLCipherManager ()
 - (void)sendError:(NSString *)error;
-+ (NSError *)errorWithSQLitePointer:(char *)errorPointer;
++ (NSError *)errorWithSQLitePointer:(const char *)errorPointer;
 + (NSError *)errorUsingDatabase:(NSString *)problem reason:(NSString *)dbMessage;
 @end
 
@@ -89,7 +89,7 @@ static SQLCipherManager *sharedManager = nil;
     }
 }
 
-+ (NSError *)errorWithSQLitePointer:(char *)errorPointer {
++ (NSError *)errorWithSQLitePointer:(const char *)errorPointer {
     NSString *errMsg = [NSString stringWithCString:errorPointer encoding:NSUTF8StringEncoding];
     NSString *description = @"An error occurred executing a SQL statement";
     NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:description, NSLocalizedDescriptionKey, errMsg, NSLocalizedFailureReasonErrorKey, nil];
@@ -280,25 +280,28 @@ static SQLCipherManager *sharedManager = nil;
     }
 	// 2. Attach a re-key database
     NSString *sql = nil;
+    int rc = 0;
     // Provide new KEY to ATTACH if not nil
+    NSError *attachError;
     if (password != nil) {
-        sql = [NSString stringWithFormat:@"ATTACH DATABASE '%@' AS rekey KEY '%@';", 
-               [self pathToRekeyDatabase], 
-               [password stringByReplacingOccurrencesOfString:@"'" withString:@"''"]];
+        sql = @"ATTACH DATABASE ? AS rekey KEY ?;";
+        [self execute:sql
+                error:&attachError
+           withParams:[NSArray arrayWithObjects:[self pathToRekeyDatabase], password, nil]];
     }
     else {
         // The current key will be used by ATTACH
-        sql = [NSString stringWithFormat:@"ATTACH DATABASE '%@' AS rekey;", [self pathToRekeyDatabase]];
+        sql = @"ATTACH DATABASE ? AS rekey;";
+        [self execute:sql
+                error:&attachError
+           withParams:[NSArray arrayWithObjects:[self pathToRekeyDatabase], nil]];
     }
-    char *errorPointer;
-    int rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, &errorPointer);
     if (rc != SQLITE_OK) {
         failed = YES;
         // setup the error object
-        NSString *errMsg = [NSString stringWithCString:errorPointer encoding:NSUTF8StringEncoding];
-        *error = [SQLCipherManager errorUsingDatabase:@"Unable to attach rekey database" 
-                                               reason:errMsg];
-        sqlite3_free(errorPointer);
+        if (attachError != nil && error != NULL) {
+            *error = attachError;
+        }
     }
 	// 2.a rekey cipher
 	if (cipher != nil) {
@@ -308,8 +311,10 @@ static SQLCipherManager *sharedManager = nil;
 		if (rc != SQLITE_OK) {
 			failed = YES;
 			// setup the error object
-			*error = [SQLCipherManager errorUsingDatabase:@"Unable to set rekey.cipher" 
-										 reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+            if (error != NULL) {
+                *error = [SQLCipherManager errorUsingDatabase:@"Unable to set rekey.cipher"
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+            }
 		}
 	}
 	// 2.b rekey kdf_iter
@@ -320,8 +325,10 @@ static SQLCipherManager *sharedManager = nil;
 		if (rc != SQLITE_OK) {
 			failed = YES;
 			// setup the error object
-			*error = [SQLCipherManager errorUsingDatabase:@"Unable to set rekey.kdf_iter"
-										 reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+            if (error != NULL) {
+                *error = [SQLCipherManager errorUsingDatabase:@"Unable to set rekey.kdf_iter"
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+            }
 		}
 	}
     // sqlcipher_export
@@ -332,8 +339,10 @@ static SQLCipherManager *sharedManager = nil;
         if (rc != SQLITE_OK) {
             failed = YES;
             // setup the error object
-			*error = [SQLCipherManager errorUsingDatabase:@"Unable to copy data to rekey database" 
-                                                   reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+            if (error != NULL) {
+                *error = [SQLCipherManager errorUsingDatabase:@"Unable to copy data to rekey database"
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+            }
         }
         // we need to update the user version, too
         NSInteger version = self.schemaVersion;
@@ -342,8 +351,10 @@ static SQLCipherManager *sharedManager = nil;
         if (rc != SQLITE_OK) {
             failed = YES;
             // setup the error object
-			*error = [SQLCipherManager errorUsingDatabase:@"Unable to set user version" 
-                                                   reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+            if (error != NULL) {
+                *error = [SQLCipherManager errorUsingDatabase:@"Unable to set user version"
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+            }
         }
 	}
     // DETACH rekey database
@@ -353,8 +364,10 @@ static SQLCipherManager *sharedManager = nil;
         if (rc != SQLITE_OK) {
             failed = YES;
             // setup the error object
-			*error = [SQLCipherManager errorUsingDatabase:@"Unable to detach rekey database" 
-                                                   reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+            if (error != NULL) {
+                *error = [SQLCipherManager errorUsingDatabase:@"Unable to detach rekey database"
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+            }
         }
     }
     // move the new db into place
@@ -371,8 +384,10 @@ static SQLCipherManager *sharedManager = nil;
                                  iterations:iterations
                                    withHMAC:self.useHMACPageProtection] == NO) {
             failed = YES;
-            *error = [SQLCipherManager errorUsingDatabase:@"Unable to open database after moving rekey into place" 
-                                                   reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+            if (error != NULL) {
+                *error = [SQLCipherManager errorUsingDatabase:@"Unable to open database after moving rekey into place"
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+            }
         }
 	}
 	// if there were no failures...
@@ -641,7 +656,6 @@ static SQLCipherManager *sharedManager = nil;
 	return YES;
 }
 
-/* FIXME: this should throw (or return from block) an NSException, or an NSError pointer, not NSAssert (crash) */
 - (void)execute:(NSString *)query withBlock:(void (^)(sqlite3_stmt *stmt))block {
 	sqlite3_stmt *stmt;
     @try {
@@ -660,36 +674,68 @@ static SQLCipherManager *sharedManager = nil;
 	return;
 }
 
-- (void)execute:(NSString *)sqlCommand withParams:(id)firstParam, ... {
-    id eachParam;
-    va_list argumentList;
-    sqlite3_stmt *stmt;
-    NSInteger idx = 0;
-    @try {
-        if (sqlite3_prepare_v2(database, [sqlCommand UTF8String], -1, &stmt, NULL) == SQLITE_OK) {
-            // if we have list of params, bind them.
-            if (firstParam) {
-                eachParam = firstParam;
-                va_start(argumentList, firstParam);
-                do {
-                    if ([eachParam isKindOfClass:[NSString class]]) {
-                        sqlite3_bind_text(stmt, (int)++idx, [eachParam UTF8String], -1, SQLITE_TRANSIENT);
-                    } else if ([eachParam isKindOfClass:[NSData class]]) {
-                        sqlite3_bind_blob(stmt, (int)++idx, [eachParam bytes], (int)[eachParam length], SQLITE_STATIC);
-                    } else { // assume this is an NSNumber int for now...
-                        // FIXME: add float/decimal support
-                        sqlite3_bind_int(stmt, (int)++idx, [eachParam intValue]);
-                    }
-                } while ((eachParam = va_arg(argumentList, id)));
-                va_end(argumentList);
-            }
-        } else {
-            NSAssert1(0, @"failed to prepare statement '%s'", sqlite3_errmsg(database));
+/**
+ *  Executes SQL with ? bind parameters. This method throws an NSException on database errors.
+ *
+ *  @param sqlCommand SQL command string with ? bind parameters
+ *  @param NSArray of objects of type NSString, NSData, and NSNumber, exclusively (bound as text, blob, and int, respectively)
+ */
+- (void)execute:(NSString *)sqlCommand withParams:(NSArray *)params {
+    NSError *error;
+    BOOL success = [self execute:sqlCommand error:&error withArguments:params];
+    if (success == NO) {
+        if (error != NULL) {
+            NSException *e = [NSException exceptionWithName:SQLCipherManagerCommandException
+                                                     reason:[error localizedFailureReason]
+                                                   userInfo:[error userInfo]];
+            @throw e;
         }
     }
-    @finally {
-        sqlite3_finalize(stmt);
+}
+
+- (BOOL)execute:(NSString *)sqlCommand error:(NSError **)error withParams:(NSArray *)params {
+    BOOL success = [self execute:sqlCommand error:error withArguments:params];
+    return success;
+}
+
+- (BOOL)execute:(NSString *)sqlCommand error:(NSError **)error withArguments:(NSArray *)arguments {
+    sqlite3_stmt *stmt;
+    NSInteger idx = 0;
+    BOOL success = YES;
+    if (sqlite3_prepare_v2(database, [sqlCommand UTF8String], -1, &stmt, NULL) == SQLITE_OK) {
+        // if we have list of params, bind them.
+        for (id eachParam in arguments) {
+            if ([eachParam isKindOfClass:[NSString class]]) {
+                sqlite3_bind_text(stmt, (int)++idx, [eachParam UTF8String], -1, SQLITE_TRANSIENT);
+            } else if ([eachParam isKindOfClass:[NSData class]]) {
+                sqlite3_bind_blob(stmt, (int)++idx, [eachParam bytes], (int)[eachParam length], SQLITE_STATIC);
+            } else { // assume this is an NSNumber int for now...
+                // FIXME: add float/decimal support
+                sqlite3_bind_int(stmt, (int)++idx, [eachParam intValue]);
+            }
+        }
+        // execute the statement
+        int rc = sqlite3_step(stmt);
+        // check for errors
+        if (rc != SQLITE_DONE) {
+            success = NO;
+            if (error != NULL) {
+                const char *errorMessage = sqlite3_errmsg(database);
+                NSError *errorObj = [[self class] errorWithSQLitePointer:errorMessage];
+                *error = errorObj;
+            }
+        }
+    } else { // failed to prepare statement
+        success = NO;
+        if (error != NULL) {
+            const char *errorMessage = sqlite3_errmsg(database);
+            NSError *errorObj = [[self class] errorWithSQLitePointer:errorMessage];
+            *error = errorObj;
+        }
     }
+    // finalize the statement handle to avoid leaking it
+    sqlite3_finalize(stmt);
+    return success;
 }
 
 - (NSString *)getScalarWith:(NSString*)query {
