@@ -21,6 +21,8 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 + (NSError *)errorUsingDatabase:(NSString *)problem reason:(NSString *)dbMessage;
 @end
 
+static const void * const kDispatchQueueSpecificKey = &kDispatchQueueSpecificKey;
+
 @implementation SQLCipherManager
 
 @synthesize database, inTransaction, delegate, cachedPassword;
@@ -38,6 +40,9 @@ static SQLCipherManager *sharedManager = nil;
     if (self != nil) {
         _useHMACPageProtection  = YES;
         _kdfIterations          = 64000;
+        // set up a serial dispatch queue for database operations
+        _serialQueue            = dispatch_queue_create([[NSString stringWithFormat:@"SQLCipher.%@", self] UTF8String], NULL);
+        dispatch_queue_set_specific(_serialQueue, kDispatchQueueSpecificKey, (__bridge void *)self, NULL);
     }
     return self;
 }
@@ -53,6 +58,23 @@ static SQLCipherManager *sharedManager = nil;
 - (id)initWithPath:(NSString *)path {
     NSURL *absoluteURL = [[[NSURL alloc] initFileURLWithPath:path isDirectory:NO] autorelease];
     return [self initWithURL:absoluteURL];
+}
+
+- (dispatch_queue_t)serialQueue {
+    return _serialQueue;
+}
+
+- (void)inQueue:(void (^)(SQLCipherManager *manager))block {
+    /* Get the currently executing queue (which should probably be nil, but in theory could be another DB queue
+     * and then check it against self to make sure we're not about to deadlock. */
+    // Credit for this goes to Gus Mueller and his implementation in fmdb/FMDatabaseQueue
+    SQLCipherManager *currentManager = (__bridge id)dispatch_get_specific(kDispatchQueueSpecificKey);
+    assert(currentManager != self && "inQueue: was called reentrantly on the same queue, which would lead to a deadlock");
+    [self retain];
+    dispatch_sync(_serialQueue, ^{
+        block(self);
+    });
+    [self release];
 }
 
 - (void)setDatabasePath:(NSString *)databasePath {
@@ -783,9 +805,8 @@ static SQLCipherManager *sharedManager = nil;
 	return [self countForSQL: [NSString stringWithFormat:@"SELECT COUNT(*) FROM %@;", tableName]];
 }
 
-# pragma mark -
-# pragma mark Dealloc!
 - (void)dealloc {
+    dispatch_release(_serialQueue);
     [_databaseUrl release];
 	if(cachedPassword) {
 		memset((void *)[cachedPassword UTF8String], 0, [cachedPassword length]);

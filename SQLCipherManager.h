@@ -35,6 +35,7 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
     NSInteger _kdfIterations;
 @private
     NSURL *_databaseUrl;
+    dispatch_queue_t _serialQueue;
 }
 
 @property (nonatomic) sqlite3 *database;
@@ -104,6 +105,8 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 - (NSString *)getScalarWith:(NSString *)query;
 - (NSInteger)countForSQL:(NSString *)countSQL;
 - (NSInteger)countForTable:(NSString *)tableName;
+- (dispatch_queue_t)serialQueue;
+- (void)inQueue:(void (^)(SQLCipherManager *manager))block;
 
 @end
 
