@@ -249,9 +249,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				"ARCHS[sdk=iphoneos*]" = (
-					armv7,
+					"$(ARCHS_STANDARD)",
 					armv7s,
-					arm64,
 				);
 				"ARCHS[sdk=macosx*]" = (
 					x86_64,
@@ -275,7 +274,10 @@
 		1DEB922408733DC00010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				"ARCHS[sdk=iphoneos*]" = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
+				"ARCHS[sdk=iphoneos*]" = (
+					"$(ARCHS_STANDARD)",
+					armv7s,
+				);
 				"ARCHS[sdk=macosx*]" = (
 					x86_64,
 					i386,
