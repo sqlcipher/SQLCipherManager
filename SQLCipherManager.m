@@ -488,17 +488,12 @@ static SQLCipherManager *sharedManager = nil;
 
 - (BOOL)databaseExists {
     BOOL exists = NO;
-#if !TARGET_OS_IPHONE
     // this method just returns YES in iOS, is not implemented
     NSError *error = nil;
     exists = [[self databaseUrl] checkResourceIsReachableAndReturnError:&error];
     if (exists == NO && error != nil) {
-        DLog(@"database DNE, error: %@", error);
+        DLog(@"Error checking for availability of database file %@, error: %@", [self.databaseUrl path],error);
     }
-#else
-    NSFileManager *fm = [NSFileManager defaultManager];
-    exists = [fm fileExistsAtPath:[[self databaseUrl] path]];
-#endif
     return exists;
 }
 
