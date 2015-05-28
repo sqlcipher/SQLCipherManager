@@ -597,6 +597,112 @@ static SQLCipherManager *sharedManager = nil;
     [self execute:sql];
 }
 
++ (void)upgradeDatabase:(SQLCipherManager *)oldManager withSchemaFromDatabase:(SQLCipherManager *)newManager {
+    if (oldManager == newManager) {
+        NSLog(@"Caller is attempting to upgrade two databases that are the same object! Returning early.");
+        return;
+    }
+    /*
+     * Routine:
+     * 1. SELECT the names and SQL of tables from remote.sqlite_master (except those that contain 'ditto' or 'sqlite' in the name)
+     * 2. SELECT the names of local indexes from local.sqlite_master
+     * 3. DROP the local indexes
+     * 4. RENAME the local tables to _temp
+     * 5. CREATE local tables fresh using sql from remote.sqlite_master
+     * 6. For local temp tables, copy records into the new tables
+     * 7. CREATE indexes using sql from remote.sqlite_master
+     * 8. DROP the local temp tables
+     * 9. ditto_attach() the new tables
+     * 10. update local user_version with user_version from remote.sqlite_master
+     */
+    // An array of strings, the name of the tables in the older database
+    NSMutableArray *oldTables = [NSMutableArray array];
+    [oldManager execute:@"SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name;"
+              withBlock:^(sqlite3_stmt *stmt) {
+                  const unsigned char * cValue;
+                  cValue = sqlite3_column_text(stmt, 0);
+                  NSString *name = [NSString stringWithUTF8String:(char *)cValue];
+                  // ignore ditto and sqlite tables
+                  if (([name rangeOfString:@"ditto"].location == NSNotFound) && ([name rangeOfString:@"sqlite"].location == NSNotFound)) {
+                      [oldTables addObject:name];
+                  }
+              }];
+    // An array of dictionary objects from the newer database @{ name, sql }
+    NSMutableArray *newTables = [NSMutableArray array];
+    [newManager execute:@"SELECT name,sql FROM sqlite_master WHERE type = 'table' ORDER BY name;"
+              withBlock:^(sqlite3_stmt *stmt) {
+                  const unsigned char * cValue;
+                  cValue = sqlite3_column_text(stmt, 0);
+                  NSString *name = [NSString stringWithUTF8String:(char *)cValue];
+                  // ignore ditto and sqlite tables
+                  if (([name rangeOfString:@"ditto"].location == NSNotFound) && ([name rangeOfString:@"sqlite"].location == NSNotFound)) {
+                      cValue = sqlite3_column_text(stmt, 1);
+                      NSString *sql = [NSString stringWithUTF8String:(char *)cValue];
+                      NSDictionary *table = @{
+                                              @"name": name,
+                                              @"sql": sql
+                                              };
+                      [newTables addObject:table];
+                  }
+              }];
+    NSMutableArray *oldIndexes = [NSMutableArray array];
+    [oldManager execute:@"SELECT name FROM sqlite_master WHERE type = 'index' ORDER BY name;"
+              withBlock:^(sqlite3_stmt *stmt) {
+                  const unsigned char * cValue;
+                  cValue = sqlite3_column_text(stmt, 0);
+                  NSString *name = [NSString stringWithUTF8String:(char *)cValue];
+                  if (([name rangeOfString:@"ditto"].location == NSNotFound) && ([name rangeOfString:@"sqlite"].location == NSNotFound)) {
+                      // FIXME: ignore ditto and sqlite indexes
+                      [oldIndexes addObject:name];
+                  }
+              }];
+    // An array of dictionaries @{ name, sql } for each index
+    NSMutableArray *newIndexes = [NSMutableArray array];
+    [newManager execute:@"SELECT name,sql FROM sqlite_master WHERE type = 'index' ORDER BY name;"
+              withBlock:^(sqlite3_stmt *stmt) {
+                  const unsigned char * cValue;
+                  cValue = sqlite3_column_text(stmt, 0);
+                  NSString *name = [NSString stringWithUTF8String:(char *)cValue];
+                  // ignore ditto and sqlite tables
+                  if (([name rangeOfString:@"ditto"].location == NSNotFound) && ([name rangeOfString:@"sqlite"].location == NSNotFound)) {
+                      cValue = sqlite3_column_text(stmt, 1);
+                      NSString *sql = [NSString stringWithUTF8String:(char *)cValue];
+                      NSDictionary *index = @{
+                                              @"name": name,
+                                              @"sql": sql
+                                              };
+                      [newIndexes addObject:index];
+                  }
+              }];
+    // Drop indexes on older database
+    for (NSString *name in oldIndexes) {
+        [oldManager execute:@"DROP INDEX IF EXISTS ?;" withParams:@[name]];
+    }
+    // Rename older database tables to <name>_tempo
+    for (NSString *name in oldTables) {
+        NSString *sql  = [NSString stringWithFormat:@"ALTER TABLE %@ RENAME TO %@_temp;", name, name];
+        [oldManager execute:sql];
+    }
+    // Create tables using schema from remote database tables
+    for (NSDictionary *table in newTables) {
+        [oldManager execute:[table objectForKey:@"sql"]];
+    }
+    // Create new indexes using schema from remote database
+    for (NSDictionary *index in newIndexes) {
+        [oldManager execute:[index objectForKey:@"sql"]];
+    }
+    // Copy data from the old tables into the new ones and drop the old ones
+    for (NSString *name in oldTables) {
+        [oldManager execute:[NSString stringWithFormat:@"INSERT INTO %@ SELECT * FROM %@_temp;", name, name]];
+        [oldManager execute:[NSString stringWithFormat:@"DROP TABLE %@_temp;", name]];
+    }
+    // Attach ditto replication to the NEW tables
+    for (NSDictionary *table in newTables) {
+        [oldManager execute:[NSString stringWithFormat:@"SELECT ditto_attach('%@');", [table objectForKey:@"name"]]];
+    }
+    [oldManager setSchemaVersion:[newManager schemaVersion]];
+}
+
 # pragma mark -
 # pragma mark Transaction / Query methods
 - (void)beginTransaction {
@@ -677,7 +783,7 @@ static SQLCipherManager *sharedManager = nil;
             }
         }
         else {
-            NSAssert1(0, @"Unable to prepare query '%s'", sqlite3_errmsg(database));
+            NSLog(@"Unable to prepare query '%s'", sqlite3_errmsg(database));
         }
     }
     @finally {

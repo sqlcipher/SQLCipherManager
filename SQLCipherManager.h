@@ -90,6 +90,7 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 
 // Schema methods
 - (NSInteger)getSchemaVersion __attribute__((deprecated)); // DEPRECATED, use schemaVersion dynamic property
++ (void)upgradeDatabase:(SQLCipherManager *)oldManager withSchemaFromDatabase:(SQLCipherManager *)newManager;
 
 // Query / Transaction methods
 - (void)execute:(NSString *)sqlCommand; // throws an NSException on command failure
