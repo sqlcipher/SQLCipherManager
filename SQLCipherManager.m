@@ -65,7 +65,7 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (void)inQueue:(void (^)(SQLCipherManager *manager))block {
-    /* Get the currently executing queue (which should probably be nil, but in theory could be another DB queue
+    /* Get the currently executing queue (which should probably be nil, but in theory could be another DB queue)
      * and then check it against self to make sure we're not about to deadlock. */
     // Credit for this goes to Gus Mueller and his implementation in fmdb/FMDatabaseQueue
     SQLCipherManager *currentManager = (__bridge id)dispatch_get_specific(kDispatchQueueSpecificKey);
