@@ -32,6 +32,7 @@ static const void * const kDispatchQueueSpecificKey = &kDispatchQueueSpecificKey
 @dynamic schemaVersion;
 @dynamic isDatabaseUnlocked;
 @synthesize kdfIterations=_kdfIterations;
+@synthesize serialQueue=_serialQueue;
 
 static SQLCipherManager *sharedManager = nil;
 
@@ -60,10 +61,6 @@ static SQLCipherManager *sharedManager = nil;
     return [self initWithURL:absoluteURL];
 }
 
-- (dispatch_queue_t)serialQueue {
-    return _serialQueue;
-}
-
 - (void)inQueue:(void (^)(SQLCipherManager *manager))block {
     /* Get the currently executing queue (which should probably be nil, but in theory could be another DB queue
      * and then check it against self to make sure we're not about to deadlock. */
@@ -71,8 +68,25 @@ static SQLCipherManager *sharedManager = nil;
     SQLCipherManager *currentManager = (__bridge id)dispatch_get_specific(kDispatchQueueSpecificKey);
     assert(currentManager != self && "inQueue: was called reentrantly on the same queue, which would lead to a deadlock");
     [self retain];
-    dispatch_sync(_serialQueue, ^{
-        block(self);
+    dispatch_sync(self.serialQueue, ^{
+        @autoreleasepool {
+            block(self);
+        }
+    });
+    [self release];
+}
+
+- (void)inQueueAsync:(void (^)(SQLCipherManager *manager))block {
+    /* Get the currently executing queue (which should probably be nil, but in theory could be another DB queue
+     * and then check it against self to make sure we're not about to deadlock. */
+    // Credit for this goes to Gus Mueller and his implementation in fmdb/FMDatabaseQueue
+    SQLCipherManager *currentManager = (__bridge id)dispatch_get_specific(kDispatchQueueSpecificKey);
+    assert(currentManager != self && "inQueue: was called reentrantly on the same queue, which would lead to a deadlock");
+    [self retain];
+    dispatch_async(self.serialQueue, ^{
+        @autoreleasepool {
+            block(self);
+        }
     });
     [self release];
 }

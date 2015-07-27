@@ -49,6 +49,7 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 @property (nonatomic) NSInteger schemaVersion;
 @property (nonatomic, readonly) BOOL isDatabaseUnlocked;
 @property (nonatomic) NSInteger kdfIterations;
+@property (nonatomic) dispatch_queue_t serialQueue;
 
 - (id)initWithURL:(NSURL *)absoluteUrl;
 - (id)initWithPath:(NSString *)path; // DEPRECATED
@@ -107,6 +108,7 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 - (NSInteger)countForTable:(NSString *)tableName;
 - (dispatch_queue_t)serialQueue;
 - (void)inQueue:(void (^)(SQLCipherManager *manager))block;
+- (void)inQueueAsync:(void (^)(SQLCipherManager *manager))block;
 
 @end
 
