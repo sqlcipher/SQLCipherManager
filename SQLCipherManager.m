@@ -33,6 +33,8 @@ static const void * const kDispatchQueueSpecificKey = &kDispatchQueueSpecificKey
 @dynamic isDatabaseUnlocked;
 @synthesize kdfIterations=_kdfIterations;
 @synthesize serialQueue=_serialQueue;
+@dynamic cipherVersion;
+@dynamic cipherProvider;
 
 static SQLCipherManager *sharedManager = nil;
 
@@ -595,6 +597,14 @@ static SQLCipherManager *sharedManager = nil;
 
 #pragma mark -
 #pragma mark Schema methods
+
+- (NSString *)cipherVersion {
+    return [self getScalarWith:@"PRAGMA cipher_version;"];
+}
+
+- (NSString *)cipherProvider {
+    return [self getScalarWith:@"PRAGMA cipher_provider;"];
+}
 
 - (NSInteger)getSchemaVersion {
     return self.schemaVersion;

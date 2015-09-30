@@ -50,6 +50,8 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 @property (nonatomic, readonly) BOOL isDatabaseUnlocked;
 @property (nonatomic) NSInteger kdfIterations;
 @property (nonatomic, assign, readonly) dispatch_queue_t serialQueue;
+@property (nonatomic, readonly) NSString *cipherVersion;
+@property (nonatomic, readonly) NSString *cipherProvider;
 
 - (id)initWithURL:(NSURL *)absoluteUrl;
 - (id)initWithPath:(NSString *)path; // DEPRECATED
