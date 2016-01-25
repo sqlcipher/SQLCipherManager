@@ -254,9 +254,7 @@ static SQLCipherManager *sharedManager = nil;
         if (unlocked == NO) {
             sqlite3_close(database);
         } else {
-            NSLog(@"Updating cached password");
             self.cachedPassword = password;
-            NSLog(@"Calling delegate now that DB is open.");
             if (newDatabase == YES) {
                 if (self.delegate && [self.delegate respondsToSelector:@selector(didCreateDatabase)]) {
                     [self.delegate didCreateDatabase];
