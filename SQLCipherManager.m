@@ -678,19 +678,19 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (BOOL)execute:(NSString *)sqlCommand error:(NSError **)error {
-	const char *sql = [sqlCommand UTF8String];
-	char *errorPointer = nil;
+    const char *sql = [sqlCommand UTF8String];
+    char *errorPointer = nil;
     int rc = sqlite3_exec(database, sql, NULL, NULL, &errorPointer);
-	if (rc != SQLITE_OK) {
+    if (rc != SQLITE_OK) {
         if (errorPointer) {
             if (error != NULL) {
                 *error = [[self class] errorWithSQLitePointer:errorPointer];
             }
             sqlite3_free(errorPointer);
         }
-		return NO;
-	}
-	return YES;
+        return NO;
+    }
+    return YES;
 }
 
 - (void)execute:(NSString *)query withBlock:(void (^)(sqlite3_stmt *stmt))block {
