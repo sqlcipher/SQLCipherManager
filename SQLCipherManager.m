@@ -235,7 +235,6 @@ static SQLCipherManager *sharedManager = nil;
     if (sqlite3_open([[self pathToDatabase] UTF8String], &database) == SQLITE_OK) {
         // HMAC page protection is enabled by default in SQLCipher 2.0
         if (useHMAC == NO) {
-            NSLog(@"HMAC page protection has been disabled");
             [self execute:@"PRAGMA cipher_default_use_hmac = OFF;" error:NULL];
         } else {
             [self execute:@"PRAGMA cipher_default_use_hmac = ON;" error:NULL];
@@ -254,9 +253,7 @@ static SQLCipherManager *sharedManager = nil;
         if (unlocked == NO) {
             sqlite3_close(database);
         } else {
-            NSLog(@"Updating cached password");
             self.cachedPassword = password;
-            NSLog(@"Calling delegate now that DB is open.");
             if (newDatabase == YES) {
                 if (self.delegate && [self.delegate respondsToSelector:@selector(didCreateDatabase)]) {
                     [self.delegate didCreateDatabase];
@@ -297,7 +294,6 @@ static SQLCipherManager *sharedManager = nil;
     BOOL failed = NO; // used to track whether any sqlcipher operations have yet failed
     // if HMAC page protection should be on (e.g. we're doing an upgrade), make it so:
     if (self.useHMACPageProtection) {
-        NSLog(@"Ensuring HMAC page protection is on by default for re-key");
         [self execute:@"PRAGMA cipher_default_use_hmac = ON;" error:NULL];
     } else {
         // otherwise, better turn it off for this operation, caller may be looking
@@ -427,12 +423,11 @@ static SQLCipherManager *sharedManager = nil;
                                                        reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
             }
         }
-    }
-    // if there were no failures...
-    if (failed == NO) {
-        NSLog(@"rekey tested successfully, removing backup file %@", [self pathToRollbackDatabase]);
-        // 3.a. remove backup db file, return YES
-        [fm removeItemAtPath:[self pathToRollbackDatabase] error:nil];
+	}
+	// if there were no failures...
+	if (failed == NO) {
+		// 3.a. remove backup db file, return YES
+		[fm removeItemAtPath:[self pathToRollbackDatabase] error:nil];
         // Remove the rekey db, too, since we copied it over
         [fm removeItemAtPath:[self pathToRekeyDatabase] error:nil];
     } else { // ah, but there were failures...
@@ -505,9 +500,6 @@ static SQLCipherManager *sharedManager = nil;
     // this method just returns YES in iOS, is not implemented
     NSError *error = nil;
     exists = [[self databaseUrl] checkResourceIsReachableAndReturnError:&error];
-    if (exists == NO && error != nil) {
-        NSLog(@"Error checking for availability of database file %@, error: %@", [self.databaseUrl path],error);
-    }
     return exists;
 }
 
@@ -681,11 +673,13 @@ static SQLCipherManager *sharedManager = nil;
 
 - (BOOL)execute:(NSString *)sqlCommand error:(NSError **)error {
     const char *sql = [sqlCommand UTF8String];
-    char *errorPointer;
+    char *errorPointer = nil;
     int rc = sqlite3_exec(database, sql, NULL, NULL, &errorPointer);
     if (rc != SQLITE_OK) {
-        if (error != NULL) {
-            *error = [[self class] errorWithSQLitePointer:errorPointer];
+        if (errorPointer) {
+            if (error != NULL) {
+                *error = [[self class] errorWithSQLitePointer:errorPointer];
+            }
             sqlite3_free(errorPointer);
         }
         return NO;
