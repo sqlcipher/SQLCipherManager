@@ -239,6 +239,9 @@ static SQLCipherManager *sharedManager = nil;
         } else {
             [self execute:@"PRAGMA cipher_default_use_hmac = ON;" error:NULL];
         }
+        // FIXME: Manually adjusting the page size for now so that it's compatible with previous verisons, we'll want to migrate their db to the new page size in the future
+        [self execute:@"PRAGMA cipher_default_page_size = 1024;" error:NULL];
+        DLog(@"default page size = %@", [self getScalarWith:@"PRAGMA cipher_default_page_size"]);
         // submit the password
         const char *key = [password UTF8String];
         sqlite3_key(database, key, (int)strlen(key));
@@ -289,7 +292,8 @@ static SQLCipherManager *sharedManager = nil;
                            error:(NSError **)error {
     if (delegate && [delegate respondsToSelector:@selector(sqlCipherManagerWillRekeyDatabase)])
         [delegate sqlCipherManagerWillRekeyDatabase];
-    
+    // FIXME: Manually adjusting the page size for now so that it's compatible with previous verisons, we'll want to migrate their db to the new page size in the future
+    [self execute:@"PRAGMA cipher_default_page_size = 1024;" error:NULL];
     NSFileManager *fm = [NSFileManager defaultManager];
     BOOL failed = NO; // used to track whether any sqlcipher operations have yet failed
     // if HMAC page protection should be on (e.g. we're doing an upgrade), make it so:
