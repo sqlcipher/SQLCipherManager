@@ -624,22 +624,20 @@ static SQLCipherManager *sharedManager = nil;
 
 - (void)commitTransaction {
     if (inTransaction) {
-        NSError *error;
-        if ([self execute:@"COMMIT;" error:&error]) {
+        @try {
+            [self execute:@"COMMIT;"];
+        } @finally {
             inTransaction = NO;
-        } else {
-            NSAssert1(0, @"Fatal database error executing COMMIT command: %@", error);
         }
     }
 }
 
 - (void)rollbackTransaction {
     if (inTransaction) {
-        NSError *error;
-        if ([self execute:@"ROLLBACK;" error:&error]) {
+        @try {
+            [self execute:@"ROLLBACK;"];
+        } @finally {
             inTransaction = NO;
-        } else {
-            NSAssert1(0, @"Fatal database error executing ROLLBACK command: %@", error);
         }
     }
 }
