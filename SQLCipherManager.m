@@ -620,31 +620,22 @@ static SQLCipherManager *sharedManager = nil;
 # pragma mark Transaction / Query methods
 - (void)beginTransaction {
     if (inTransaction == NO) {
-        @try {
-            [self execute:@"BEGIN;"];
-        } @finally {
-            inTransaction = YES;
-        }
+        [self execute:@"BEGIN;"];
+        inTransaction = YES;
     }
 }
 
 - (void)commitTransaction {
     if (inTransaction) {
-        @try {
-            [self execute:@"COMMIT;"];
-        } @finally {
-            inTransaction = NO;
-        }
+        [self execute:@"COMMIT;"];
+        inTransaction = NO;
     }
 }
 
 - (void)rollbackTransaction {
     if (inTransaction) {
-        @try {
-            [self execute:@"ROLLBACK;"];
-        } @finally {
-            inTransaction = NO;
-        }
+        [self execute:@"ROLLBACK;"];
+        inTransaction = NO;
     }
 }
 
