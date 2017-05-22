@@ -68,7 +68,7 @@ static SQLCipherManager *sharedManager = nil;
      * and then check it against self to make sure we're not about to deadlock. */
     // Credit for this goes to Gus Mueller and his implementation in fmdb/FMDatabaseQueue
     SQLCipherManager *currentManager = (__bridge id)dispatch_get_specific(kDispatchQueueSpecificKey);
-    assert(currentManager != self && "inQueue: was called reentrantly on the same queue, which would lead to a deadlock");
+    NSAssert(currentManager != self, @"inQueue: was called reentrantly on the same queue, which would lead to a deadlock");
     [self retain];
     dispatch_sync(self.serialQueue, ^{
         @autoreleasepool {
@@ -83,7 +83,7 @@ static SQLCipherManager *sharedManager = nil;
      * and then check it against self to make sure we're not about to deadlock. */
     // Credit for this goes to Gus Mueller and his implementation in fmdb/FMDatabaseQueue
     SQLCipherManager *currentManager = (__bridge id)dispatch_get_specific(kDispatchQueueSpecificKey);
-    assert(currentManager != self && "inQueue: was called reentrantly on the same queue, which would lead to a deadlock");
+    NSAssert(currentManager != self, @"inQueue: was called reentrantly on the same queue, which would lead to a deadlock");
     [self retain];
     dispatch_async(self.serialQueue, ^{
         @autoreleasepool {
