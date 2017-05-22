@@ -537,8 +537,18 @@ static SQLCipherManager *sharedManager = nil;
     NSString *dbPath = [self pathToDatabase];
     NSString *backupPath = path; // argument from caller should be full path to file
     // insist that the two files be present
-    NSAssert1([fm fileExistsAtPath:dbPath], @"no db file at %@", dbPath);
-    NSAssert1([fm fileExistsAtPath:backupPath], @"no backup db file at %@", backupPath);
+    if ([fm fileExistsAtPath:dbPath] == NO) {
+        if (error != NULL) {
+            *error = [[self class] errorUsingDatabase:@"Unable to restore from rollback database" reason:@"Missing file to replace"];
+        }
+        return NO;
+    }
+    if ([fm fileExistsAtPath:backupPath] == NO) {
+        if (error != NULL) {
+            *error = [[self class] errorUsingDatabase:@"Unable to restore from rollback database" reason:@"Missing rollback database file"];
+        }
+        return NO;
+    }
     // remove the original to make way for the backup
     NSLog(@"removing the file at the primary database path...");
     if ([fm removeItemAtPath:dbPath error:error]) {
