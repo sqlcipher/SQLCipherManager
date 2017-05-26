@@ -686,6 +686,12 @@ static SQLCipherManager *sharedManager = nil;
                 *error = [[self class] errorWithSQLitePointer:errorPointer];
             }
             sqlite3_free(errorPointer);
+        } else {
+            if (error != NULL) {
+            *error = [[[NSError alloc] initWithDomain:SQLCipherManagerErrorDomain
+                                               code:ERR_SQLCIPHER_COMMAND_FAILED
+                                             userInfo:@{NSLocalizedDescriptionKey : @"Unknow SQL Error"}] autorelease];
+            }
         }
         return NO;
     }
