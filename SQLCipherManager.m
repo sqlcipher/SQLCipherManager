@@ -107,17 +107,11 @@ static SQLCipherManager *sharedManager = nil;
     if (_databaseUrl == nil) {
         return nil;
     }
-#if TARGET_OS_IPHONE
     NSError *error;
     NSFileManager *fm = [NSFileManager defaultManager];
     NSDictionary *attrs = [fm attributesOfItemAtPath:[self databasePath] error:&error];
     unsigned long long size = [attrs fileSize];
     NSNumber *fileSize = [NSNumber numberWithUnsignedLongLong: size];
-#else
-    NSArray *array = [NSArray arrayWithObject:NSURLFileSizeKey];
-    NSDictionary *attrs = [_databaseUrl resourceValuesForKeys:array error:NULL];
-    NSNumber *fileSize = (NSNumber *)[attrs objectForKey:NSURLFileSizeKey];
-#endif
     return fileSize;
 }
 
