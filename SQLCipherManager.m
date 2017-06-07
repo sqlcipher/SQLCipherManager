@@ -459,8 +459,10 @@ static SQLCipherManager *sharedManager = nil;
     if (database == nil) {
         return NO;
     }
-    if (sqlite3_exec(database, "SELECT count(*) FROM sqlite_master;", NULL, NULL, NULL) == SQLITE_OK) {
-        return YES;
+    @autoreleasepool {
+        if (sqlite3_exec(database, "SELECT count(*) FROM sqlite_master;", NULL, NULL, NULL) == SQLITE_OK) {
+            return YES;
+        }
     }
     return NO;
 }
