@@ -53,13 +53,13 @@ static SQLCipherManager *sharedManager = nil;
 - (id)initWithURL:(NSURL *)absoluteUrl {
     self = [self init];
     if (self != nil) {
-        _databaseUrl = [absoluteUrl retain];
+        _databaseUrl = absoluteUrl;
     }
     return self;
 }
 
 - (id)initWithPath:(NSString *)path {
-    NSURL *absoluteURL = [[[NSURL alloc] initFileURLWithPath:path isDirectory:NO] autorelease];
+    NSURL *absoluteURL = [[NSURL alloc] initFileURLWithPath:path isDirectory:NO];
     return [self initWithURL:absoluteURL];
 }
 
@@ -69,13 +69,11 @@ static SQLCipherManager *sharedManager = nil;
     // Credit for this goes to Gus Mueller and his implementation in fmdb/FMDatabaseQueue
     SQLCipherManager *currentManager = (__bridge id)dispatch_get_specific(kDispatchQueueSpecificKey);
     NSAssert(currentManager != self, @"inQueue: was called reentrantly on the same queue, which would lead to a deadlock");
-    [self retain];
     dispatch_sync(self.serialQueue, ^{
         @autoreleasepool {
             block(self);
         }
     });
-    [self release];
 }
 
 - (void)inQueueAsync:(void (^)(SQLCipherManager *manager))block {
@@ -84,19 +82,16 @@ static SQLCipherManager *sharedManager = nil;
     // Credit for this goes to Gus Mueller and his implementation in fmdb/FMDatabaseQueue
     SQLCipherManager *currentManager = (__bridge id)dispatch_get_specific(kDispatchQueueSpecificKey);
     NSAssert(currentManager != self, @"inQueue: was called reentrantly on the same queue, which would lead to a deadlock");
-    [self retain];
     dispatch_async(self.serialQueue, ^{
         @autoreleasepool {
             block(self);
         }
     });
-    [self release];
 }
 
 - (void)setDatabasePath:(NSString *)databasePath {
     NSURL *url = [[NSURL alloc] initFileURLWithPath:databasePath isDirectory:NO];
     [self setDatabaseUrl:url];
-    [url release];
 }
 
 - (NSString *)databasePath {
@@ -125,10 +120,9 @@ static SQLCipherManager *sharedManager = nil;
     NSString *errMsg = [NSString stringWithCString:errorPointer encoding:NSUTF8StringEncoding];
     NSString *description = @"An error occurred executing a SQL statement";
     NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:description, NSLocalizedDescriptionKey, errMsg, NSLocalizedFailureReasonErrorKey, nil];
-    return [[[NSError alloc] initWithDomain:SQLCipherManagerErrorDomain
+    return [[NSError alloc] initWithDomain:SQLCipherManagerErrorDomain
                                        code:ERR_SQLCIPHER_COMMAND_FAILED
-                                   userInfo:userInfo]
-            autorelease];
+                                   userInfo:userInfo];
 }
 
 + (NSError *)errorUsingDatabase:(NSString *)problem reason:(NSString *)dbMessage {
@@ -167,7 +161,6 @@ static SQLCipherManager *sharedManager = nil;
         if (cachedPassword != nil) {
             memset((void *)[cachedPassword UTF8String], 0, [cachedPassword length]);
         }
-        [cachedPassword release];
         cachedPassword = mutableCopy;
     }
 }
@@ -682,9 +675,9 @@ static SQLCipherManager *sharedManager = nil;
             sqlite3_free(errorPointer);
         } else {
             if (error != NULL) {
-            *error = [[[NSError alloc] initWithDomain:SQLCipherManagerErrorDomain
+            *error = [[NSError alloc] initWithDomain:SQLCipherManagerErrorDomain
                                                code:ERR_SQLCIPHER_COMMAND_FAILED
-                                             userInfo:@{NSLocalizedDescriptionKey : @"Unknow SQL Error"}] autorelease];
+                                             userInfo:@{NSLocalizedDescriptionKey : @"Unknow SQL Error"}];
             }
         }
         return NO;
@@ -818,13 +811,9 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (void)dealloc {
-    dispatch_release(_serialQueue);
-    [_databaseUrl release];
     if(cachedPassword) {
         memset((void *)[cachedPassword UTF8String], 0, [cachedPassword length]);
     }
-    [cachedPassword release];
-    [super dealloc];
 }
 
 @end
