@@ -658,7 +658,7 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (void)execute:(NSString *)sqlCommand {
-    NSError *error;
+    NSError *error = nil;
     if ([self execute:sqlCommand error:&error] != YES) {
         NSException *e = [NSException exceptionWithName:SQLCipherManagerCommandException reason:[error localizedFailureReason] userInfo:[error userInfo]];
         @throw e;
