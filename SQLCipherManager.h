@@ -78,6 +78,12 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 - (void)reallyCloseDatabase;
 - (BOOL)reopenDatabase:(NSError **)error;
 
+
+// Open, Close, and Re-Key using Raw Data
+- (void)createDatabaseWithRawData:(NSString *)rawHexKey;
+- (BOOL)openDatabaseWithRawData:(NSString *)rawHexKey;
+- (BOOL)openDatabaseWithRawData:(NSString *)rawHexKey cipher:(NSString *)cipher withHMAC:(BOOL)useHMAC;
+
 // Backup and File Location methods
 - (NSString *)databaseDirectory;
 - (BOOL)databaseExists;

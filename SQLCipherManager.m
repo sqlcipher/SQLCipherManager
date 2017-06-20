@@ -11,6 +11,8 @@
 #define kSQLCipherRollback @"rollback"
 #define kSQLCipherRekey @"rekey"
 
+#define AES_CBC @"aes-256-cbc"
+
 NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 NSString * const SQLCipherManagerCommandException = @"SQLCipherManagerCommandException";
 NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQueryKey";
@@ -177,13 +179,13 @@ static SQLCipherManager *sharedManager = nil;
 
 - (void)createDatabaseWithPassword:(NSString *)password {
     // just a pass-through, really
-    [self openDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:self.kdfIterations withHMAC:self.useHMACPageProtection];
+    [self openDatabaseWithOptions:password cipher:AES_CBC iterations:self.kdfIterations withHMAC:self.useHMACPageProtection];
 }
 
 - (BOOL)openDatabaseWithPassword:(NSString *)password {
     BOOL unlocked = NO;
     unlocked = [self openDatabaseWithOptions: password
-                                      cipher: @"aes-256-cbc"
+                                      cipher: AES_CBC
                                   iterations: self.kdfIterations
                                     withHMAC: self.useHMACPageProtection];
     return unlocked;
@@ -200,7 +202,7 @@ static SQLCipherManager *sharedManager = nil;
     if (unlocked == YES) {
         NSLog(@"initiating re-key to new settings");
         unlocked = [self rekeyDatabaseWithOptions: password
-                                           cipher: @"aes-256-cbc"
+                                           cipher: AES_CBC
                                        iterations: self.kdfIterations
                                             error: &error];
         if (!unlocked && error) {
@@ -212,7 +214,7 @@ static SQLCipherManager *sharedManager = nil;
 
 - (BOOL)openDatabaseWithCachedPassword {
     return [self openDatabaseWithOptions: self.cachedPassword
-                                  cipher: @"aes-256-cbc"
+                                  cipher: AES_CBC
                               iterations: self.kdfIterations
                                 withHMAC: YES];
 }
@@ -276,7 +278,7 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (BOOL)rekeyDatabaseWithPassword:(NSString *)password {
-    return [self rekeyDatabaseWithOptions:password cipher:@"aes-256-cbc" iterations:self.kdfIterations error:NULL];
+    return [self rekeyDatabaseWithOptions:password cipher:AES_CBC iterations:self.kdfIterations error:NULL];
 }
 
 - (BOOL)rekeyDatabaseWithOptions:(NSString*)password
@@ -484,6 +486,53 @@ static SQLCipherManager *sharedManager = nil;
         }
         return NO;
     }
+}
+
+# pragma mark -
+# pragma mark - Raw Key Open/Create/Re-key
+
+- (void)createDatabaseWithRawData:(NSString *)rawHexKey {
+    [self openDatabaseWithRawData:rawHexKey cipher:AES_CBC withHMAC:self.useHMACPageProtection];
+}
+
+- (BOOL)openDatabaseWithRawData:(NSString *)rawHexKey {
+    return [self openDatabaseWithRawData:rawHexKey cipher:AES_CBC withHMAC:self.useHMACPageProtection];
+}
+
+- (BOOL)openDatabaseWithRawData:(NSString *)rawHexKey cipher:(NSString *)cipher withHMAC:(BOOL)useHMAC {
+    BOOL unlocked = NO;
+    BOOL newDatabase = NO;
+    if ([self databaseExists] == NO) {
+        newDatabase = YES;
+    }
+    if (sqlite3_open([[self pathToDatabase] UTF8String], &database) == SQLITE_OK) {
+        // HMAC page protection is enabled by default in SQLCipher 2.0
+        if (useHMAC == NO) {
+            [self execute:@"PRAGMA cipher_default_use_hmac = OFF;" error:NULL];
+        } else {
+            [self execute:@"PRAGMA cipher_default_use_hmac = ON;" error:NULL];
+        }
+        // FIXME: Manually adjusting the page size for now so that it's compatible with previous verisons, we'll want to migrate their db to the new page size in the future
+        [self execute:@"PRAGMA cipher_default_page_size = 1024;" error:NULL];
+        // submit the password
+        if (rawHexKey.length == 64) { // make sure we're at 64 characters
+            [self execute:[NSString stringWithFormat:@"PRAGMA key = \"x'%@\"", rawHexKey]];
+        }
+        // both cipher and kdf_iter must be specified AFTER key
+        if (cipher) {
+            [self execute:[NSString stringWithFormat:@"PRAGMA cipher='%@';", cipher] error:NULL];
+        }
+        unlocked = [self isDatabaseUnlocked];
+        if (unlocked == NO) {
+            sqlite3_close(database);
+        } else {
+            // TODO: make a cached data in place of cached password maybe?
+            
+        }
+    } else {
+        NSAssert1(0, @"Unable to open database file '%s'", sqlite3_errmsg(database));
+    }
+    return unlocked;
 }
 
 # pragma mark -
