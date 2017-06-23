@@ -112,6 +112,7 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 - (void)rollbackTransaction;
 - (void)transactionWithBlock:(void(^)(void))block;
 - (NSString *)getScalarWith:(NSString *)query;
+- (NSData *)getBlobWith:(NSString *)query;
 - (NSInteger)countForSQL:(NSString *)countSQL;
 - (NSInteger)countForTable:(NSString *)tableName;
 - (dispatch_queue_t)serialQueue;

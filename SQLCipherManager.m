@@ -858,6 +858,41 @@ static SQLCipherManager *sharedManager = nil;
     return scalar;
 }
 
+#pragma mark - Get Blob data
+
+- (NSData *)getBlobWith:(NSString *)query {
+    sqlite3_stmt *stmt;
+    NSData *blob = nil;
+    @try {
+        int rc = 0;
+        rc = sqlite3_prepare_v2(database, [query UTF8String], -1, &stmt, NULL);
+        if (rc == SQLITE_OK) {
+            rc = sqlite3_step(stmt);
+            if (rc == SQLITE_ROW) {
+                int blobLen = 0;
+                blobLen = sqlite3_column_bytes(stmt, 0);
+                if (blobLen > 0) {
+                    blob = [[[NSData alloc] initWithBytes:sqlite3_column_blob(stmt, 0) length:blobLen] autorelease];
+                }
+            }
+        } else {
+            NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+            [dict setObject:query forKey:SQLCipherManagerUserInfoQueryKey];
+            NSString *errorString = [NSString stringWithFormat:@"SQLite error %d: %s", sqlite3_errcode(database), sqlite3_errmsg(database)];
+            if (inTransaction) {
+                NSLog(@"ROLLBACK");
+                [self rollbackTransaction];
+            }
+            NSException *e = [NSException exceptionWithName:SQLCipherManagerCommandException reason:errorString userInfo:dict];
+            @throw e;
+        }
+    }
+    @finally {
+        sqlite3_finalize(stmt);
+    }
+    return blob;
+}
+
 - (NSInteger)countForSQL:(NSString *)countSQL {
     NSString *scalar = [self getScalarWith:countSQL];
     NSInteger count = [scalar integerValue];
