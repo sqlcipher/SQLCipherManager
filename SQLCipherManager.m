@@ -251,12 +251,12 @@ static SQLCipherManager *sharedManager = nil;
         } else {
             self.cachedPassword = password;
             if (newDatabase == YES) {
-                if (self.delegate && [self.delegate respondsToSelector:@selector(didCreateDatabase)]) {
-                    [self.delegate didCreateDatabase];
+                if (self.delegate && [self.delegate respondsToSelector:@selector(didCreateDatabase:)]) {
+                    [self.delegate didCreateDatabase:self];
                 }
             } else {
-                if (self.delegate && [self.delegate respondsToSelector:@selector(didOpenDatabase)]) {
-                    [self.delegate didOpenDatabase];
+                if (self.delegate && [self.delegate respondsToSelector:@selector(didOpenDatabase:)]) {
+                    [self.delegate didOpenDatabase:self];
                 }
             }
         }
