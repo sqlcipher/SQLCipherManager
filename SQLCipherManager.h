@@ -18,8 +18,8 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 
 @protocol SQLCipherManagerDelegate <NSObject>
 @optional
-- (void)didOpenDatabase;
-- (void)didCreateDatabase;
+- (void)didOpenDatabase:(SQLCipherManager *)manager;
+- (void)didCreateDatabase:(SQLCipherManager *)manager;
 - (void)didEncounterRekeyError;
 - (void)didEncounterDatabaseError:(NSString *)error;
 - (void)sqlCipherManagerWillRekeyDatabase;
