@@ -516,7 +516,8 @@ static SQLCipherManager *sharedManager = nil;
         [self execute:@"PRAGMA cipher_default_page_size = 1024;" error:NULL];
         // submit the password
         if (rawHexKey.length == 64) { // make sure we're at 64 characters
-            [self execute:[NSString stringWithFormat:@"PRAGMA key = \"x'%@\"", rawHexKey]];
+            NSString *sqlKey = [NSString stringWithFormat:@"PRAGMA key = \"x'%@'\"", rawHexKey];
+            [self execute:sqlKey];
         }
         // both cipher and kdf_iter must be specified AFTER key
         if (cipher) {
@@ -534,6 +535,173 @@ static SQLCipherManager *sharedManager = nil;
     }
     return unlocked;
 }
+
+- (BOOL)rekeyDatabaseWithRawData:(NSString *)rawHexKey {
+    return [self rekeyDatabaseRawDataWithOptions:rawHexKey cipher:AES_CBC iterations:self.kdfIterations error:NULL];
+}
+
+- (BOOL)rekeyDatabaseRawDataWithOptions:(NSString *)rawHexKey
+                          cipher:(NSString *)cipher
+                      iterations:(NSInteger)iterations
+                           error:(NSError **)error {
+    // FIXME: Manually adjusting the page size for now so that it's compatible with previous verisons, we'll want to migrate their db to the new page size in the future
+    [self execute:@"PRAGMA cipher_default_page_size = 1024;" error:NULL];
+    NSFileManager *fm = [NSFileManager defaultManager];
+    BOOL failed = NO; // used to track whether any sqlcipher operations have yet failed
+    // if HMAC page protection should be on (e.g. we're doing an upgrade), make it so:
+    if (self.useHMACPageProtection) {
+        [self execute:@"PRAGMA cipher_default_use_hmac = ON;" error:NULL];
+    } else {
+        // otherwise, better turn it off for this operation, caller may be looking
+        // to create another non-HMAC database
+        [self execute:@"PRAGMA cipher_default_use_hmac = OFF;" error:NULL];
+    }
+    // 1. backup current db file
+    BOOL copied = [self createRollbackDatabase:error];
+    if (copied == NO) {
+        NSLog(@"could not create rollback database aborting");
+        // halt immediatly, can't create a backup
+        return NO;
+    }
+    // make sure there's no older rekey database in the way here
+    if ([fm fileExistsAtPath: [self pathToRekeyDatabase]]) {
+        NSLog(@"Removing older rekey database found on disk");
+        [fm removeItemAtPath:[self pathToRekeyDatabase] error:error];
+    }
+    // 2. Attach a re-key database
+    NSString *sql = nil;
+    int rc = 0;
+    // Provide new KEY to ATTACH if not nil
+    NSError *attachError;
+    if (rawHexKey != nil) {
+        NSString *rawHexKeyWithX = [NSString stringWithFormat:@"%@%@%@", @"x'", rawHexKey, @"'"];
+        sql = @"ATTACH DATABASE ? AS rekey KEY ?;";
+        [self execute:sql
+                error:&attachError
+           withParams:[NSArray arrayWithObjects:[self pathToRekeyDatabase], rawHexKeyWithX, nil]];
+    }
+    else {
+        // The current key will be used by ATTACH
+        sql = @"ATTACH DATABASE ? AS rekey;";
+        [self execute:sql
+                error:&attachError
+           withParams:[NSArray arrayWithObjects:[self pathToRekeyDatabase], nil]];
+    }
+    if (rc != SQLITE_OK) {
+        failed = YES;
+        // setup the error object
+        if (attachError != nil && error != NULL) {
+            *error = attachError;
+        }
+    }
+    // 2.a rekey cipher
+    if (cipher != nil) {
+        NSLog(@"setting new cipher: %@", cipher);
+        sql = [NSString stringWithFormat:@"PRAGMA rekey.cipher='%@';", cipher];
+        rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, NULL);
+        if (rc != SQLITE_OK) {
+            failed = YES;
+            // setup the error object
+            if (error != NULL) {
+                *error = [SQLCipherManager errorUsingDatabase:@"Unable to set rekey.cipher"
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+            }
+        }
+    }
+    // 2.b rekey kdf_iter
+    if (failed == NO && iterations > 0) {
+        NSLog(@"setting new kdf_iter: %d", (int)iterations);
+        sql = [NSString stringWithFormat:@"PRAGMA rekey.kdf_iter='%d';", (int)iterations];
+        rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, NULL);
+        if (rc != SQLITE_OK) {
+            failed = YES;
+            // setup the error object
+            if (error != NULL) {
+                *error = [SQLCipherManager errorUsingDatabase:@"Unable to set rekey.kdf_iter"
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+            }
+        }
+    }
+    // sqlcipher_export
+    if (failed == NO && rawHexKey) {
+        NSLog(@"exporting schema and data to rekey database");
+        sql = @"SELECT sqlcipher_export('rekey');";
+        rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, NULL);
+        if (rc != SQLITE_OK) {
+            failed = YES;
+            // setup the error object
+            if (error != NULL) {
+                *error = [SQLCipherManager errorUsingDatabase:@"Unable to copy data to rekey database"
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+            }
+        }
+        // we need to update the user version, too
+        NSInteger version = self.schemaVersion;
+        sql = [NSString stringWithFormat:@"PRAGMA rekey.user_version = %d;", (int)version];
+        rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, NULL);
+        if (rc != SQLITE_OK) {
+            failed = YES;
+            // setup the error object
+            if (error != NULL) {
+                *error = [SQLCipherManager errorUsingDatabase:@"Unable to set user version"
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+            }
+        }
+    }
+    // DETACH rekey database
+    if (failed == NO) {
+        sql = @"DETACH DATABASE rekey;";
+        rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, NULL);
+        if (rc != SQLITE_OK) {
+            failed = YES;
+            // setup the error object
+            if (error != NULL) {
+                *error = [SQLCipherManager errorUsingDatabase:@"Unable to detach rekey database"
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+            }
+        }
+    }
+    // move the new db into place
+    if (failed == NO) {
+        // close our current handle to the original db
+        [self reallyCloseDatabase];
+        // move the rekey db into place
+        if ([self restoreDatabaseFromFileAtPath:[self pathToRekeyDatabase] error:error] == NO) {
+            failed = YES;
+        }
+        // test that our new db works
+        if ([self openDatabaseWithRawData:rawHexKey cipher:cipher withHMAC:self.useHMACPageProtection] == NO) {
+            failed = YES;
+            if (error != NULL) {
+                *error = [SQLCipherManager errorUsingDatabase:@"Unable to open database after moving rekey into place"
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+            }
+        }
+    }
+    // if there were no failures...
+    if (failed == NO) {
+        // 3.a. remove backup db file, return YES
+        [fm removeItemAtPath:[self pathToRollbackDatabase] error:nil];
+        // Remove the rekey db, too, since we copied it over
+        [fm removeItemAtPath:[self pathToRekeyDatabase] error:nil];
+    } else { // ah, but there were failures...
+        // 3.b. close db, replace file with backup
+        NSLog(@"rekey test failed, restoring db from backup");
+        [self closeDatabase];
+        if (![self restoreDatabaseFromRollback:error]) {
+            NSLog(@"Unable to restore database from backup file");
+        }
+        // now this presents an interesting situation... need to let the application/delegate handle this, really
+        [delegate didEncounterRekeyError];
+    }
+    // if successful, update cached password
+    if (failed == NO) {
+        self.cachedPassword = rawHexKey;
+    }
+    return (failed) ? NO : YES;
+}
+
+
 
 # pragma mark -
 # pragma mark Backup and file location methods

@@ -83,6 +83,8 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 - (void)createDatabaseWithRawData:(NSString *)rawHexKey;
 - (BOOL)openDatabaseWithRawData:(NSString *)rawHexKey;
 - (BOOL)openDatabaseWithRawData:(NSString *)rawHexKey cipher:(NSString *)cipher withHMAC:(BOOL)useHMAC;
+- (BOOL)rekeyDatabaseWithRawData:(NSString *)rawHexKey;
+- (BOOL)rekeyDatabaseRawDataWithOptions:(NSString *)rawHexKey cipher:(NSString *)cipher iterations:(NSInteger)iterations error:(NSError **)error;
 
 // Backup and File Location methods
 - (NSString *)databaseDirectory;
