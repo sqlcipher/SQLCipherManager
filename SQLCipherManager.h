@@ -29,7 +29,7 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 @interface SQLCipherManager : NSObject {
 	sqlite3 *database;
 	BOOL inTransaction;
-	id __unsafe_unretained delegate;
+	id __weak delegate;
 	NSString *cachedPassword;
     BOOL _useHMACPageProtection;
     NSInteger _kdfIterations;
@@ -40,7 +40,7 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 
 @property (nonatomic) sqlite3 *database;
 @property (nonatomic) BOOL inTransaction;
-@property (nonatomic, unsafe_unretained) id<SQLCipherManagerDelegate> delegate;
+@property (nonatomic, weak) id<SQLCipherManagerDelegate> delegate;
 
 @property (nonatomic, strong) NSString *cachedPassword;
 @property (nonatomic, strong) NSString *databasePath;
