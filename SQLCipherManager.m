@@ -1033,7 +1033,7 @@ static SQLCipherManager *sharedManager = nil;
                 int blobLen = 0;
                 blobLen = sqlite3_column_bytes(stmt, 0);
                 if (blobLen > 0) {
-                    blob = [[[NSData alloc] initWithBytes:sqlite3_column_blob(stmt, 0) length:blobLen] autorelease];
+                    blob = [[NSData alloc] initWithBytes:sqlite3_column_blob(stmt, 0) length:blobLen];
                 }
             }
         } else {
