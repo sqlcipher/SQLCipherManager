@@ -18,8 +18,8 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 
 @protocol SQLCipherManagerDelegate <NSObject>
 @optional
-- (void)didOpenDatabase;
-- (void)didCreateDatabase;
+- (void)didOpenDatabase:(SQLCipherManager *)manager;
+- (void)didCreateDatabase:(SQLCipherManager *)manager;
 - (void)didEncounterRekeyError;
 - (void)didEncounterDatabaseError:(NSString *)error;
 - (void)sqlCipherManagerWillRekeyDatabase;
@@ -29,7 +29,7 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 @interface SQLCipherManager : NSObject {
 	sqlite3 *database;
 	BOOL inTransaction;
-	id delegate;
+	id __weak delegate;
 	NSString *cachedPassword;
     BOOL _useHMACPageProtection;
     NSInteger _kdfIterations;
@@ -40,18 +40,18 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 
 @property (nonatomic) sqlite3 *database;
 @property (nonatomic) BOOL inTransaction;
-@property (nonatomic, assign) id<SQLCipherManagerDelegate> delegate;
+@property (nonatomic, weak) id<SQLCipherManagerDelegate> delegate;
 
-@property (nonatomic, retain) NSString *cachedPassword;
-@property (nonatomic, retain) NSString *databasePath;
-@property (nonatomic, retain) NSURL *databaseUrl;
+@property (nonatomic, strong) NSString *cachedPassword;
+@property (nonatomic, strong) NSString *databasePath;
+@property (nonatomic, strong) NSURL *databaseUrl;
 @property (nonatomic) BOOL useHMACPageProtection;
 @property (nonatomic) NSInteger schemaVersion;
 @property (nonatomic, readonly) BOOL isDatabaseUnlocked;
 @property (nonatomic) NSInteger kdfIterations;
-@property (nonatomic, assign, readonly) dispatch_queue_t serialQueue;
-@property (nonatomic, readonly) NSString *cipherVersion;
-@property (nonatomic, readonly) NSString *cipherProvider;
+@property (nonatomic, readonly) dispatch_queue_t serialQueue;
+@property (weak, nonatomic, readonly) NSString *cipherVersion;
+@property (weak, nonatomic, readonly) NSString *cipherProvider;
 
 - (id)initWithURL:(NSURL *)absoluteUrl;
 - (id)initWithPath:(NSString *)path; // DEPRECATED
