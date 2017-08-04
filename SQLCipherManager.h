@@ -26,17 +26,7 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 - (void)sqlCipherManagerDidRekeyDatabase;
 @end
 
-@interface SQLCipherManager : NSObject {
-	sqlite3 *database;
-	BOOL inTransaction;
-	id __weak delegate;
-	NSString *cachedPassword;
-    BOOL _useHMACPageProtection;
-    NSInteger _kdfIterations;
-@private
-    NSURL *_databaseUrl;
-    dispatch_queue_t _serialQueue;
-}
+@interface SQLCipherManager : NSObject
 
 @property (nonatomic) sqlite3 *database;
 @property (nonatomic) BOOL inTransaction;
