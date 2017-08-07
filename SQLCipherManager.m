@@ -495,7 +495,9 @@ static SQLCipherManager *sharedManager = nil;
     if ([self databaseExists] == NO) {
         newDatabase = YES;
     }
-    if (sqlite3_open([[self pathToDatabase] UTF8String], &database) == SQLITE_OK) {
+    sqlite3 *db = nil;
+    if (sqlite3_open([[self pathToDatabase] UTF8String], &db) == SQLITE_OK) {
+        self.database = db;
         // HMAC page protection is enabled by default in SQLCipher 2.0
         if (useHMAC == NO) {
             [self execute:@"PRAGMA cipher_default_use_hmac = OFF;" error:NULL];
@@ -515,13 +517,13 @@ static SQLCipherManager *sharedManager = nil;
         }
         unlocked = [self isDatabaseUnlocked];
         if (unlocked == NO) {
-            sqlite3_close(database);
+            sqlite3_close(self.database);
         } else {
             // TODO: make a cached data in place of cached password maybe?
             
         }
     } else {
-        NSAssert1(0, @"Unable to open database file '%s'", sqlite3_errmsg(database));
+        NSAssert1(0, @"Unable to open database file '%s'", sqlite3_errmsg(self.database));
     }
     return unlocked;
 }
@@ -588,13 +590,13 @@ static SQLCipherManager *sharedManager = nil;
     if (cipher != nil) {
         NSLog(@"setting new cipher: %@", cipher);
         sql = [NSString stringWithFormat:@"PRAGMA rekey.cipher='%@';", cipher];
-        rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, NULL);
+        rc = sqlite3_exec(self.database, [sql UTF8String], NULL, NULL, NULL);
         if (rc != SQLITE_OK) {
             failed = YES;
             // setup the error object
             if (error != NULL) {
                 *error = [SQLCipherManager errorUsingDatabase:@"Unable to set rekey.cipher"
-                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]];
             }
         }
     }
@@ -602,13 +604,13 @@ static SQLCipherManager *sharedManager = nil;
     if (failed == NO && iterations > 0) {
         NSLog(@"setting new kdf_iter: %d", (int)iterations);
         sql = [NSString stringWithFormat:@"PRAGMA rekey.kdf_iter='%d';", (int)iterations];
-        rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, NULL);
+        rc = sqlite3_exec(self.database, [sql UTF8String], NULL, NULL, NULL);
         if (rc != SQLITE_OK) {
             failed = YES;
             // setup the error object
             if (error != NULL) {
                 *error = [SQLCipherManager errorUsingDatabase:@"Unable to set rekey.kdf_iter"
-                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]];
             }
         }
     }
@@ -616,38 +618,38 @@ static SQLCipherManager *sharedManager = nil;
     if (failed == NO && rawHexKey) {
         NSLog(@"exporting schema and data to rekey database");
         sql = @"SELECT sqlcipher_export('rekey');";
-        rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, NULL);
+        rc = sqlite3_exec(self.database, [sql UTF8String], NULL, NULL, NULL);
         if (rc != SQLITE_OK) {
             failed = YES;
             // setup the error object
             if (error != NULL) {
                 *error = [SQLCipherManager errorUsingDatabase:@"Unable to copy data to rekey database"
-                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]];
             }
         }
         // we need to update the user version, too
         NSInteger version = self.schemaVersion;
         sql = [NSString stringWithFormat:@"PRAGMA rekey.user_version = %d;", (int)version];
-        rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, NULL);
+        rc = sqlite3_exec(self.database, [sql UTF8String], NULL, NULL, NULL);
         if (rc != SQLITE_OK) {
             failed = YES;
             // setup the error object
             if (error != NULL) {
                 *error = [SQLCipherManager errorUsingDatabase:@"Unable to set user version"
-                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]];
             }
         }
     }
     // DETACH rekey database
     if (failed == NO) {
         sql = @"DETACH DATABASE rekey;";
-        rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, NULL);
+        rc = sqlite3_exec(self.database, [sql UTF8String], NULL, NULL, NULL);
         if (rc != SQLITE_OK) {
             failed = YES;
             // setup the error object
             if (error != NULL) {
                 *error = [SQLCipherManager errorUsingDatabase:@"Unable to detach rekey database"
-                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]];
             }
         }
     }
@@ -664,7 +666,7 @@ static SQLCipherManager *sharedManager = nil;
             failed = YES;
             if (error != NULL) {
                 *error = [SQLCipherManager errorUsingDatabase:@"Unable to open database after moving rekey into place"
-                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(database)]];
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]];
             }
         }
     }
@@ -682,7 +684,7 @@ static SQLCipherManager *sharedManager = nil;
             NSLog(@"Unable to restore database from backup file");
         }
         // now this presents an interesting situation... need to let the application/delegate handle this, really
-        [delegate didEncounterRekeyError];
+        [self.delegate didEncounterRekeyError];
     }
     // if successful, update cached password
     if (failed == NO) {
@@ -1023,7 +1025,7 @@ static SQLCipherManager *sharedManager = nil;
     NSData *blob = nil;
     @try {
         int rc = 0;
-        rc = sqlite3_prepare_v2(database, [query UTF8String], -1, &stmt, NULL);
+        rc = sqlite3_prepare_v2(self.database, [query UTF8String], -1, &stmt, NULL);
         if (rc == SQLITE_OK) {
             rc = sqlite3_step(stmt);
             if (rc == SQLITE_ROW) {
@@ -1036,8 +1038,8 @@ static SQLCipherManager *sharedManager = nil;
         } else {
             NSMutableDictionary *dict = [NSMutableDictionary dictionary];
             [dict setObject:query forKey:SQLCipherManagerUserInfoQueryKey];
-            NSString *errorString = [NSString stringWithFormat:@"SQLite error %d: %s", sqlite3_errcode(database), sqlite3_errmsg(database)];
-            if (inTransaction) {
+            NSString *errorString = [NSString stringWithFormat:@"SQLite error %d: %s", sqlite3_errcode(self.database), sqlite3_errmsg(self.database)];
+            if (self.inTransaction) {
                 NSLog(@"ROLLBACK");
                 [self rollbackTransaction];
             }
