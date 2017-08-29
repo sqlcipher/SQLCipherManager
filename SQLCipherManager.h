@@ -11,105 +11,106 @@
 
 #define ERR_SQLCIPHER_COMMAND_FAILED 1
 
-extern NSString * const SQLCipherManagerCommandException;
-extern NSString * const SQLCipherManagerUserInfoQueryKey;
+extern NSString * _Nonnull const SQLCipherManagerCommandException;
+extern NSString * _Nonnull const SQLCipherManagerUserInfoQueryKey;
 
 @class SQLCipherManager;
 
 @protocol SQLCipherManagerDelegate <NSObject>
 @optional
-- (void)didOpenDatabase:(SQLCipherManager *)manager;
-- (void)didCreateDatabase:(SQLCipherManager *)manager;
+- (void)didOpenDatabase:(SQLCipherManager *_Nonnull)manager;
+- (void)didCreateDatabase:(SQLCipherManager *_Nonnull)manager;
 - (void)didEncounterRekeyError;
-- (void)didEncounterDatabaseError:(NSString *)error;
+- (void)didEncounterDatabaseError:(NSString *_Nullable)error;
 - (void)sqlCipherManagerWillRekeyDatabase;
 - (void)sqlCipherManagerDidRekeyDatabase;
 @end
 
 @interface SQLCipherManager : NSObject
 
-@property (nonatomic) sqlite3 *database;
+@property (nonatomic, nullable) sqlite3 *database;
 @property (nonatomic) BOOL inTransaction;
-@property (nonatomic, weak) id<SQLCipherManagerDelegate> delegate;
+@property (nonatomic, weak, nullable) id<SQLCipherManagerDelegate> delegate;
 
-@property (nonatomic, strong) NSString *cachedPassword;
-@property (nonatomic, strong) NSString *databasePath;
-@property (nonatomic, strong) NSURL *databaseUrl;
+@property (nonatomic, strong, nullable) NSString *cachedPassword;
+@property (nonatomic, strong, nullable) NSString *databasePath;
+@property (nonatomic, strong, nullable) NSURL *databaseUrl;
 @property (nonatomic) BOOL useHMACPageProtection;
 @property (nonatomic) NSInteger schemaVersion;
 @property (nonatomic, readonly) BOOL isDatabaseUnlocked;
 @property (nonatomic) NSInteger kdfIterations;
-@property (nonatomic, readonly) dispatch_queue_t serialQueue;
-@property (weak, nonatomic, readonly) NSString *cipherVersion;
-@property (weak, nonatomic, readonly) NSString *cipherProvider;
+@property (nonatomic, readonly, nullable) dispatch_queue_t serialQueue;
+@property (weak, nonatomic, readonly, nullable) NSString *cipherVersion;
+@property (weak, nonatomic, readonly, nullable) NSString *cipherProvider;
 
-- (id)initWithURL:(NSURL *)absoluteUrl;
-- (id)initWithPath:(NSString *)path; // DEPRECATED
-+ (id)sharedManager;
-+ (void)setSharedManager:(SQLCipherManager *)manager;
+- (id _Nonnull)initWithURL:(NSURL *_Nonnull)absoluteUrl;
+- (id _Nonnull)initWithPath:(NSString *_Nonnull)path; // DEPRECATED
++ (id _Nonnull)sharedManager;
++ (void)setSharedManager:(SQLCipherManager *_Nonnull)manager;
 
-+ (BOOL)passwordIsValid:(NSString *)password;
++ (BOOL)passwordIsValid:(NSString *_Nonnull)password;
 
-- (NSNumber *)databaseSize;
+- (NSNumber *_Nullable)databaseSize;
 
 // Open, Close, and Re-Key methods
-- (void)createDatabaseWithPassword:(NSString *)password;
-- (BOOL)openDatabaseWithPassword:(NSString *)password;
+- (void)createDatabaseWithPassword:(NSString *_Nonnull)password;
+- (BOOL)openDatabaseWithPassword:(NSString *_Nonnull)password;
 - (BOOL)openDatabaseWithCachedPassword;
-- (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSInteger)iterations;
-- (BOOL)openDatabaseWithOptions:(NSString*)password cipher:(NSString*)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC;
-- (BOOL)openAndRekeyCFBDatabaseWithPassword:(NSString *)password __attribute__((deprecated));
-- (BOOL)rekeyDatabaseWithPassword:(NSString *)password;
-- (BOOL)rekeyDatabaseWithOptions:(NSString*)password 
-                          cipher:(NSString*)cipher 
+- (BOOL)openDatabaseWithOptions:(NSString *_Nonnull)password cipher:(NSString *_Nonnull)cipher iterations:(NSInteger)iterations;
+- (BOOL)openDatabaseWithOptions:(NSString *_Nonnull)password cipher:(NSString *_Nonnull)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC;
+- (BOOL)openAndRekeyCFBDatabaseWithPassword:(NSString *_Nonnull)password __attribute__((deprecated));
+- (BOOL)rekeyDatabaseWithPassword:(NSString *_Nonnull)password;
+- (BOOL)rekeyDatabaseWithOptions:(NSString *_Nonnull)password
+                          cipher:(NSString *_Nullable)cipher
                       iterations:(NSInteger)iterations
-                           error:(NSError **)error;
+                           error:(NSError *_Nullable*_Nullable)error;
 - (void)closeDatabase;
 - (void)reallyCloseDatabase;
-- (BOOL)reopenDatabase:(NSError **)error;
+- (BOOL)reopenDatabase:(NSError *_Nullable*_Nullable)error;
 
 
 // Open, Close, and Re-Key using Raw Data
-- (void)createDatabaseWithRawData:(NSString *)rawHexKey;
-- (BOOL)openDatabaseWithRawData:(NSString *)rawHexKey;
-- (BOOL)openDatabaseWithRawData:(NSString *)rawHexKey cipher:(NSString *)cipher withHMAC:(BOOL)useHMAC;
-- (BOOL)rekeyDatabaseWithRawData:(NSString *)rawHexKey;
-- (BOOL)rekeyDatabaseRawDataWithOptions:(NSString *)rawHexKey cipher:(NSString *)cipher iterations:(NSInteger)iterations error:(NSError **)error;
+- (void)createDatabaseWithRawData:(NSString *_Nonnull)rawHexKey;
+- (BOOL)openDatabaseWithRawData:(NSString *_Nonnull)rawHexKey;
+- (BOOL)openDatabaseWithRawData:(NSString *_Nonnull)rawHexKey cipher:(NSString *_Nonnull)cipher withHMAC:(BOOL)useHMAC;
+- (BOOL)rekeyDatabaseWithRawData:(NSString *_Nonnull)rawHexKey;
+- (BOOL)rekeyDatabaseRawDataWithOptions:(NSString *_Nonnull)rawHexKey cipher:(NSString *_Nonnull)cipher iterations:(NSInteger)iterations error:(NSError *_Nullable*_Nullable)error;
 
 // Backup and File Location methods
-- (NSString *)databaseDirectory;
+- (NSString *_Nonnull)databaseDirectory;
 - (BOOL)databaseExists;
-- (NSString *)pathToDatabase;
-- (NSString *)pathToRollbackDatabase;
-- (NSString *)pathToRekeyDatabase;
-- (BOOL)restoreDatabaseFromRollback:(NSError **)error;
-- (BOOL)removeRollbackDatabase:(NSError **)error;
-- (BOOL)restoreDatabaseFromFileAtPath:(NSString *)path error:(NSError **)error;
-- (BOOL)createReplicaAtPath:(NSString *)path;
-- (BOOL)createRollbackDatabase:(NSError **)error;
-- (BOOL)copyDatabaseToPath:(NSString *)path error:(NSError **)error;
+- (NSString *_Nonnull)pathToDatabase;
+- (NSString *_Nonnull)pathToRollbackDatabase;
+- (NSString *_Nonnull)pathToRekeyDatabase;
+- (BOOL)restoreDatabaseFromRollback:(NSError *_Nullable*_Nullable)error;
+- (BOOL)removeRollbackDatabase:(NSError *_Nullable*_Nullable)error;
+- (BOOL)restoreDatabaseFromFileAtPath:(NSString *_Nonnull)path error:(NSError *_Nullable*_Nullable)error;
+- (BOOL)createReplicaAtPath:(NSString *_Nonnull)path;
+- (BOOL)createRollbackDatabase:(NSError *_Nullable*_Nullable)error;
+- (BOOL)copyDatabaseToPath:(NSString *_Nonnull)path error:(NSError *_Nullable*_Nullable)error;
 
 // Schema methods
 - (NSInteger)getSchemaVersion __attribute__((deprecated)); // DEPRECATED, use schemaVersion dynamic property
 
 // Query / Transaction methods
-- (void)execute:(NSString *)sqlCommand; // throws an NSException on command failure
-- (BOOL)execute:(NSString *)sqlCommand error:(NSError **)error;
-- (void)execute:(NSString *)query withBlock:(void (^)(sqlite3_stmt *stmt))block;
-- (void)execute:(NSString *)sqlCommand withParams:(NSArray *)params;
-- (BOOL)execute:(NSString *)sqlCommand error:(NSError **)error withParams:(NSArray *)params;
-- (BOOL)execute:(NSString *)sqlCommand error:(NSError **)error withArguments:(NSArray *)arguments;
+- (void)execute:(NSString *_Nonnull)sqlCommand; // throws an NSException on command failure
+- (BOOL)execute:(NSString *_Nonnull)sqlCommand error:(NSError *_Nullable*_Nullable)error;
+- (void)execute:(NSString *_Nonnull)query withBlock:(void (^_Nonnull)(sqlite3_stmt *_Nonnull stmt))block;
+- (void)execute:(NSString *_Nonnull)sqlCommand withParams:(NSArray *_Nullable)params;
+- (BOOL)execute:(NSString *_Nonnull)sqlCommand error:(NSError *_Nullable*_Nullable)error withParams:(NSArray *_Nullable)params;
+- (BOOL)execute:(NSString *_Nonnull)sqlCommand error:(NSError *_Nullable*_Nullable)error withArguments:(NSArray *_Nullable)arguments;
 - (void)beginTransaction;
 - (void)commitTransaction;
 - (void)rollbackTransaction;
-- (void)transactionWithBlock:(void(^)(void))block;
-- (NSString *)getScalarWith:(NSString *)query;
-- (NSData *)getBlobWith:(NSString *)query;
-- (NSInteger)countForSQL:(NSString *)countSQL;
-- (NSInteger)countForTable:(NSString *)tableName;
-- (dispatch_queue_t)serialQueue;
-- (void)inQueue:(void (^)(SQLCipherManager *manager))block;
-- (void)inQueueAsync:(void (^)(SQLCipherManager *manager))block;
+- (void)transactionWithBlock:(void(^_Nonnull)(void))block;
+- (NSString *_Nullable)getScalar:(NSString *_Nonnull)query;
+- (NSString *_Nullable)getScalar:(NSString *_Nonnull)query with:(NSArray *_Nullable)params;
+- (NSData *_Nullable)getBlobWith:(NSString *_Nonnull)query;
+- (NSInteger)countForSQL:(NSString *_Nonnull)countSQL;
+- (NSInteger)countForTable:(NSString *_Nonnull)tableName;
+- (dispatch_queue_t _Nonnull )serialQueue;
+- (void)inQueue:(void (^_Nonnull)(SQLCipherManager *_Nonnull manager))block;
+- (void)inQueueAsync:(void (^_Nonnull)(SQLCipherManager *_Nonnull manager))block;
 
 @end
 

@@ -809,11 +809,11 @@ static SQLCipherManager *sharedManager = nil;
 #pragma mark Schema methods
 
 - (NSString *)cipherVersion {
-    return [self getScalarWith:@"PRAGMA cipher_version;"];
+    return [self getScalar:@"PRAGMA cipher_version;"];
 }
 
 - (NSString *)cipherProvider {
-    return [self getScalarWith:@"PRAGMA cipher_provider;"];
+    return [self getScalar:@"PRAGMA cipher_provider;"];
 }
 
 - (NSInteger)getSchemaVersion {
@@ -821,7 +821,7 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (NSInteger)schemaVersion {
-    NSString *scalar = [self getScalarWith:@"PRAGMA user_version;"];
+    NSString *scalar = [self getScalar:@"PRAGMA user_version;"];
     return [scalar integerValue];
 }
 
@@ -985,13 +985,29 @@ static SQLCipherManager *sharedManager = nil;
     return success;
 }
 
-- (NSString *)getScalarWith:(NSString*)query {
+- (NSString *)getScalar:(NSString *)query {
+    return [self getScalar:query with:nil];
+}
+
+- (NSString *)getScalar:(NSString *)query with:(NSArray *)params {
     sqlite3_stmt *stmt;
+    NSInteger idx = 0;
     NSString *scalar = nil;
     @try {
         int rc = 0;
         rc = sqlite3_prepare_v2(self.database, [query UTF8String], -1, &stmt, NULL);
         if (rc == SQLITE_OK) {
+            // if we have list of params, bind them.
+            for (id eachParam in params) {
+                if ([eachParam isKindOfClass:[NSString class]]) {
+                    sqlite3_bind_text(stmt, (int)++idx, [eachParam UTF8String], -1, SQLITE_TRANSIENT);
+                } else if ([eachParam isKindOfClass:[NSData class]]) {
+                    sqlite3_bind_blob(stmt, (int)++idx, [eachParam bytes], (int)[eachParam length], SQLITE_STATIC);
+                } else { // assume this is an NSNumber int for now...
+                    // FIXME: add float/decimal support
+                    sqlite3_bind_int(stmt, (int)++idx, [eachParam intValue]);
+                }
+            }
             rc = sqlite3_step(stmt);
             if (rc == SQLITE_ROW) {
                 const unsigned char * cValue;
@@ -1054,7 +1070,7 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (NSInteger)countForSQL:(NSString *)countSQL {
-    NSString *scalar = [self getScalarWith:countSQL];
+    NSString *scalar = [self getScalar:countSQL];
     NSInteger count = [scalar integerValue];
     return count;
 }
