@@ -104,6 +104,7 @@ extern NSString * _Nonnull const SQLCipherManagerUserInfoQueryKey;
 - (void)rollbackTransaction;
 - (void)transactionWithBlock:(void(^_Nonnull)(void))block;
 - (NSString *_Nullable)getScalar:(NSString *_Nonnull)query;
+- (NSString *_Nullable)getScalarWith:(NSString *_Nonnull)query __attribute__((deprecated));
 - (NSString *_Nullable)getScalar:(NSString *_Nonnull)query with:(NSArray *_Nullable)params;
 - (NSData *_Nullable)getBlobWith:(NSString *_Nonnull)query;
 - (NSInteger)countForSQL:(NSString *_Nonnull)countSQL;

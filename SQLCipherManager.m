@@ -985,6 +985,11 @@ static SQLCipherManager *sharedManager = nil;
     return success;
 }
 
+// Deprecated
+- (NSString *)getScalarWith:(NSString *)query {
+    return [self getScalar:query];
+}
+
 - (NSString *)getScalar:(NSString *)query {
     return [self getScalar:query with:nil];
 }
