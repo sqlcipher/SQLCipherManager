@@ -18,29 +18,19 @@ extern NSString * const SQLCipherManagerUserInfoQueryKey;
 
 @protocol SQLCipherManagerDelegate <NSObject>
 @optional
-- (void)didOpenDatabase;
-- (void)didCreateDatabase;
+- (void)didOpenDatabase:(SQLCipherManager *)manager;
+- (void)didCreateDatabase:(SQLCipherManager *)manager;
 - (void)didEncounterRekeyError;
 - (void)didEncounterDatabaseError:(NSString *)error;
 - (void)sqlCipherManagerWillRekeyDatabase;
 - (void)sqlCipherManagerDidRekeyDatabase;
 @end
 
-@interface SQLCipherManager : NSObject {
-	sqlite3 *database;
-	BOOL inTransaction;
-	id __unsafe_unretained delegate;
-	NSString *cachedPassword;
-    BOOL _useHMACPageProtection;
-    NSInteger _kdfIterations;
-@private
-    NSURL *_databaseUrl;
-    dispatch_queue_t _serialQueue;
-}
+@interface SQLCipherManager : NSObject
 
 @property (nonatomic) sqlite3 *database;
 @property (nonatomic) BOOL inTransaction;
-@property (nonatomic, unsafe_unretained) id<SQLCipherManagerDelegate> delegate;
+@property (nonatomic, weak) id<SQLCipherManagerDelegate> delegate;
 
 @property (nonatomic, strong) NSString *cachedPassword;
 @property (nonatomic, strong) NSString *databasePath;
