@@ -925,7 +925,7 @@ static SQLCipherManager *sharedManager = nil;
  *  Executes SQL with ? bind parameters. This method throws an NSException on database errors.
  *
  *  @param sqlCommand SQL command string with ? bind parameters
- *  @param NSArray of objects of type NSString, NSData, and NSNumber, exclusively (bound as text, blob, and int, respectively)
+ *  @param params NSArray of objects of type NSString, NSData, and NSNumber, exclusively (bound as text, blob, and int, respectively)
  */
 - (void)execute:(NSString *)sqlCommand withParams:(NSArray *)params {
     NSError *error;
