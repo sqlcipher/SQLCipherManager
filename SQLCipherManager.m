@@ -137,6 +137,10 @@ static SQLCipherManager *sharedManager = nil;
     sharedManager = manager;
 }
 
++ (void)clearSharedManager {
+    sharedManager = nil;
+}
+
 + (BOOL)passwordIsValid:(NSString *)password  {
     if (password == nil) {
         return NO;

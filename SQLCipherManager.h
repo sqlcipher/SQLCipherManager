@@ -47,6 +47,7 @@ extern NSString * _Nonnull const SQLCipherManagerUserInfoQueryKey;
 - (id _Nonnull)initWithPath:(NSString *_Nonnull)path; // DEPRECATED
 + (id _Nonnull)sharedManager;
 + (void)setSharedManager:(SQLCipherManager *_Nonnull)manager;
++ (void)clearSharedManager;
 
 + (BOOL)passwordIsValid:(NSString *_Nonnull)password;
 
