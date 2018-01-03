@@ -445,6 +445,7 @@ static SQLCipherManager *sharedManager = nil;
 
 - (void)closeDatabase {
     sqlite3_close(self.database);
+    self.inTransaction = NO;
     self.database = nil;
 }
 
@@ -455,6 +456,7 @@ static SQLCipherManager *sharedManager = nil;
         sqlite3_interrupt(self.database);
         sqlite3_close(self.database);
     }
+    self.inTransaction = NO;
     self.database = nil;
 }
 
