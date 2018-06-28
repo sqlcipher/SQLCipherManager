@@ -1090,6 +1090,94 @@ static SQLCipherManager *sharedManager = nil;
     return [self countForSQL: [NSString stringWithFormat:@"SELECT COUNT(*) FROM %@;", tableName]];
 }
 
+- (NSArray<NSArray *> *_Nullable)rowsFor:(NSString *_Nonnull)SQL
+                                    with:(NSArray *_Nullable)params
+                                   error:(NSError *_Nullable*_Nullable)error {
+    NSMutableArray *rowsArray = [NSMutableArray array];
+    int rc = 0;
+    BOOL success = YES;
+    // Prepare the query!
+    sqlite3_stmt *stmt;
+    rc = sqlite3_prepare_v2(self.database, [SQL UTF8String], -1, &stmt, NULL);
+    if (rc == SQLITE_OK) {
+        // If we have a list of params, bind them.
+        if (params != nil && [params count] > 0) {
+            NSInteger idx = 0;
+            for (id eachParam in params) {
+                if ([eachParam isKindOfClass:[NSString class]]) {
+                    sqlite3_bind_text(stmt, (int)++idx, [eachParam UTF8String], -1, SQLITE_TRANSIENT);
+                } else if ([eachParam isKindOfClass:[NSData class]]) {
+                    sqlite3_bind_blob(stmt, (int)++idx, [eachParam bytes], (int)[eachParam length], SQLITE_STATIC);
+                } else { // assume this is an NSNumber int for now...
+                    // FIXME: add float/decimal support
+                    sqlite3_bind_int(stmt, (int)++idx, [eachParam intValue]);
+                }
+            }
+        }
+        // Get the column count
+        NSInteger columnCount = (NSInteger)sqlite3_column_count(stmt);
+        // Now we're ready to step through the results
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            // A row container for our data
+            NSMutableArray *row = [NSMutableArray arrayWithCapacity:columnCount];
+            for (NSInteger i = 0; i < columnCount; i++) {
+                int column_type = sqlite3_column_type(stmt, (int)i);
+                id columnObject = nil;
+                switch (column_type) {
+                    case SQLITE_TEXT: {
+                        const unsigned char * cValue;
+                        cValue = sqlite3_column_text(stmt, (int)i);
+                        if (cValue) {
+                            columnObject = [NSString stringWithUTF8String:(char *)cValue];
+                        }
+                        break;
+                    }
+                    case SQLITE_INTEGER: {
+                        columnObject = [NSNumber numberWithInt:sqlite3_column_int(stmt, (int)i)];
+                        break;
+                    }
+                    case SQLITE_FLOAT: {
+                        columnObject = [NSNumber numberWithDouble:sqlite3_column_double(stmt, (int)i)];
+                        break;
+                    }
+                    case SQLITE_BLOB: {
+                        int dataSize = sqlite3_column_bytes(stmt, (int)i);
+                        if (dataSize > 0) {
+                            NSMutableData *data = [NSMutableData dataWithLength:(NSUInteger)dataSize];
+                            memcpy([data mutableBytes], sqlite3_column_blob(stmt, (int)i), dataSize);
+                            columnObject = data;
+                        }
+                        break;
+                    }
+                    default: { // Only type left is SQLITE_NULL
+                        columnObject = [NSNull null];
+                        break;
+                    }
+                }
+                // We'll have to use NSNull as a placeholder for any NULL values returned by the query
+                if (columnObject == nil) {
+                    columnObject = [NSNull null];
+                }
+                [row addObject:columnObject];
+            }
+            [rowsArray addObject:row];
+        }
+    } else { // Failed to prepare statement
+        success = NO;
+        if (error != NULL) {
+            const char *errorMessage = sqlite3_errmsg(self.database);
+            NSError *errorObj = [[self class] errorWithSQLitePointer:errorMessage];
+            *error = errorObj;
+        }
+    }
+    sqlite3_finalize(stmt);
+    if (success) {
+        return rowsArray;
+    } else {
+        return nil;
+    }
+}
+
 - (void)dealloc {
     if(_cachedPassword) {
         memset((void *)[_cachedPassword UTF8String], 0, [_cachedPassword length]);

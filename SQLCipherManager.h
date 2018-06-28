@@ -114,5 +114,18 @@ extern NSString * _Nonnull const SQLCipherManagerUserInfoQueryKey;
 - (void)inQueue:(void (^_Nonnull)(SQLCipherManager *_Nonnull manager))block;
 - (void)inQueueAsync:(void (^_Nonnull)(SQLCipherManager *_Nonnull manager))block;
 
+
+/**
+ Runs a SQL query and returns the results as an NSArray, each item of which is an NSArray representing a result row.
+
+ @param SQL Any SQL query
+ @param params Optional bind parameters for `SQL` param (supports NSString, NSData, and NSNumber types only)
+ @param error If an error occurs it will be supplied to this parameter by reference
+ @return An NSArray of rows (NSArray). Array will be empty if no rows are returned, and nil if an error occurs
+ */
+- (NSArray<NSArray *> *_Nullable)rowsFor:(NSString *_Nonnull)SQL
+                                    with:(NSArray *_Nullable)params
+                                   error:(NSError *_Nullable*_Nullable)error;
+
 @end
 
