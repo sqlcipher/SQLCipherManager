@@ -497,10 +497,6 @@ static SQLCipherManager *sharedManager = nil;
 
 - (BOOL)openDatabaseWithRawData:(NSString *)rawHexKey cipher:(NSString *)cipher withHMAC:(BOOL)useHMAC {
     BOOL unlocked = NO;
-    BOOL newDatabase = NO;
-    if ([self databaseExists] == NO) {
-        newDatabase = YES;
-    }
     sqlite3 *db = nil;
     if (sqlite3_open([[self pathToDatabase] UTF8String], &db) == SQLITE_OK) {
         self.database = db;
@@ -799,13 +795,17 @@ static SQLCipherManager *sharedManager = nil;
     if ([fm fileExistsAtPath:path]) {
         BOOL removed = [fm removeItemAtPath:path error:error];
         if (removed == NO) {
-            NSLog(@"unable to remove old version of backup database: %@", *error);
+            if (error != nil) {
+                NSLog(@"unable to remove old version of backup database: %@", [*error localizedDescription]);
+            }
             return NO;
         }
     }
     BOOL copied = [fm copyItemAtPath:[self pathToDatabase] toPath:path error:error];
     if (copied == NO) {
-        NSLog(@"could not copy database to path %@: %@", path, *error);
+        if (error != nil) {
+            NSLog(@"could not copy database to path %@: %@", path, [*error localizedDescription]);
+        }
         return NO;
     }
     return YES;
