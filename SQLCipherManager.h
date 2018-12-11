@@ -55,6 +55,7 @@ extern NSString * _Nonnull const SQLCipherManagerUserInfoQueryKey;
 
 // Open, Close, and Re-Key methods
 - (void)createDatabaseWithPassword:(NSString *_Nonnull)password;
+- (void)createDatabaseWithPassword:(NSString *_Nonnull)password license:(NSString *_Nullable)licenseKey;
 - (BOOL)openDatabaseWithPassword:(NSString *_Nonnull)password;
 - (BOOL)openDatabaseWithCachedPassword;
 - (BOOL)openDatabaseWithOptions:(NSString *_Nonnull)password cipher:(NSString *_Nonnull)cipher iterations:(NSInteger)iterations;

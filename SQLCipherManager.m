@@ -171,7 +171,11 @@ static SQLCipherManager *sharedManager = nil;
 
 - (void)createDatabaseWithPassword:(NSString *)password {
     // just a pass-through, really
-    [self openDatabaseWithOptions:password cipher:AES_CBC iterations:self.kdfIterations withHMAC:self.useHMACPageProtection];
+    [self createDatabaseWithPassword:password license:nil];
+}
+
+- (void)createDatabaseWithPassword:(NSString *)password license:(NSString *)licenseKey {
+    [self openDatabaseWithOptions:password cipher:AES_CBC iterations:self.kdfIterations withHMAC:self.useHMACPageProtection license:licenseKey];
 }
 
 - (BOOL)openDatabaseWithPassword:(NSString *)password {
