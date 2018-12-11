@@ -211,10 +211,22 @@ static SQLCipherManager *sharedManager = nil;
                                 withHMAC: YES];
 }
 
-- (BOOL)openDatabaseWithOptions:(NSString*)password
-                         cipher:(NSString*)cipher
+- (BOOL)openDatabaseWithOptions:(NSString *)password
+                         cipher:(NSString *)cipher
                      iterations:(NSInteger)iterations
                        withHMAC:(BOOL)useHMAC {
+    return [self openDatabaseWithOptions:password
+                                  cipher:cipher
+                              iterations:iterations
+                                withHMAC:useHMAC
+                                 license:nil];
+}
+
+- (BOOL)openDatabaseWithOptions:(NSString *)password
+                         cipher:(NSString *)cipher
+                     iterations:(NSInteger)iterations
+                       withHMAC:(BOOL)useHMAC
+                        license:(NSString *)licenseKey {
     BOOL unlocked = NO;
     BOOL newDatabase = NO;
     if ([self databaseExists] == NO) {
@@ -234,6 +246,11 @@ static SQLCipherManager *sharedManager = nil;
         // submit the password
         const char *key = [password UTF8String];
         sqlite3_key(self.database, key, (int)strlen(key));
+        // specify the license if one is present
+        if (licenseKey) {
+            NSString *licensePragma = [NSString stringWithFormat:@"PRAGMA cipher_license = '%@';", licenseKey];
+            [self execute:licensePragma];
+        }
         // both cipher and kdf_iter must be specified AFTER key
         if (cipher) {
             [self execute:[NSString stringWithFormat:@"PRAGMA cipher='%@';", cipher] error:NULL];

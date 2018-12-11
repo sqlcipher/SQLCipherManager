@@ -59,6 +59,7 @@ extern NSString * _Nonnull const SQLCipherManagerUserInfoQueryKey;
 - (BOOL)openDatabaseWithCachedPassword;
 - (BOOL)openDatabaseWithOptions:(NSString *_Nonnull)password cipher:(NSString *_Nonnull)cipher iterations:(NSInteger)iterations;
 - (BOOL)openDatabaseWithOptions:(NSString *_Nonnull)password cipher:(NSString *_Nonnull)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC;
+- (BOOL)openDatabaseWithOptions:(NSString *_Nonnull)password cipher:(NSString *_Nonnull)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC license:(NSString *_Nullable)licenseKey;
 - (BOOL)openAndRekeyCFBDatabaseWithPassword:(NSString *_Nonnull)password __attribute__((deprecated));
 - (BOOL)rekeyDatabaseWithPassword:(NSString *_Nonnull)password;
 - (BOOL)rekeyDatabaseWithOptions:(NSString *_Nonnull)password
