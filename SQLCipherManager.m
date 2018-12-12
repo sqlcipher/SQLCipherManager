@@ -179,11 +179,16 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (BOOL)openDatabaseWithPassword:(NSString *)password {
+    return [self openDatabaseWithPassword:password license:nil];
+}
+
+- (BOOL)openDatabaseWithPassword:(NSString *)password license:(NSString *)licenseKey {
     BOOL unlocked = NO;
-    unlocked = [self openDatabaseWithOptions: password
-                                      cipher: AES_CBC
-                                  iterations: self.kdfIterations
-                                    withHMAC: self.useHMACPageProtection];
+    unlocked = [self openDatabaseWithOptions:password
+                                      cipher:AES_CBC
+                                  iterations:self.kdfIterations
+                                    withHMAC:self.useHMACPageProtection
+                                     license:licenseKey];
     return unlocked;
 }
 
@@ -209,10 +214,15 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (BOOL)openDatabaseWithCachedPassword {
-    return [self openDatabaseWithOptions: self.cachedPassword
-                                  cipher: AES_CBC
-                              iterations: self.kdfIterations
-                                withHMAC: YES];
+    return [self openDatabaseWithCachedPasswordAndLicense:nil];
+}
+
+- (BOOL)openDatabaseWithCachedPasswordAndLicense:(NSString *)licenseKey {
+    return [self openDatabaseWithOptions:self.cachedPassword
+                                  cipher:AES_CBC
+                              iterations:self.kdfIterations
+                                withHMAC:YES
+                                 license:licenseKey];
 }
 
 - (BOOL)openDatabaseWithOptions:(NSString *)password
@@ -281,8 +291,8 @@ static SQLCipherManager *sharedManager = nil;
     return unlocked;
 }
 
-- (BOOL)openDatabaseWithOptions:(NSString*)password
-                         cipher:(NSString*)cipher
+- (BOOL)openDatabaseWithOptions:(NSString *)password
+                         cipher:(NSString *)cipher
                      iterations:(NSInteger)iterations {
     return [self openDatabaseWithOptions:password
                                   cipher:cipher
@@ -294,8 +304,8 @@ static SQLCipherManager *sharedManager = nil;
     return [self rekeyDatabaseWithOptions:password cipher:AES_CBC iterations:self.kdfIterations error:NULL];
 }
 
-- (BOOL)rekeyDatabaseWithOptions:(NSString*)password
-                          cipher:(NSString*)cipher
+- (BOOL)rekeyDatabaseWithOptions:(NSString *)password
+                          cipher:(NSString *)cipher
                       iterations:(NSInteger)iterations
                            error:(NSError **)error {
     if (self.delegate && [self.delegate respondsToSelector:@selector(sqlCipherManagerWillRekeyDatabase)])
@@ -505,14 +515,26 @@ static SQLCipherManager *sharedManager = nil;
 # pragma mark - Raw Key Open/Create/Re-key
 
 - (void)createDatabaseWithRawData:(NSString *)rawHexKey {
-    [self openDatabaseWithRawData:rawHexKey cipher:AES_CBC withHMAC:self.useHMACPageProtection];
+    [self createDatabaseWithRawData:rawHexKey license:nil];
+}
+
+- (void)createDatabaseWithRawData:(NSString *_Nonnull)rawHexKey license:(NSString *_Nullable)licenseKey {
+    [self openDatabaseWithRawData:rawHexKey cipher:AES_CBC withHMAC:self.useHMACPageProtection license:licenseKey];
 }
 
 - (BOOL)openDatabaseWithRawData:(NSString *)rawHexKey {
-    return [self openDatabaseWithRawData:rawHexKey cipher:AES_CBC withHMAC:self.useHMACPageProtection];
+    return [self openDatabaseWithRawData:rawHexKey license:nil];
+}
+
+- (BOOL)openDatabaseWithRawData:(NSString *_Nonnull)rawHexKey license:(NSString *_Nullable)licenseKey {
+    return [self openDatabaseWithRawData:rawHexKey cipher:AES_CBC withHMAC:self.useHMACPageProtection license:licenseKey];
 }
 
 - (BOOL)openDatabaseWithRawData:(NSString *)rawHexKey cipher:(NSString *)cipher withHMAC:(BOOL)useHMAC {
+    return [self openDatabaseWithRawData:rawHexKey cipher:cipher withHMAC:useHMAC license:nil];
+}
+
+- (BOOL)openDatabaseWithRawData:(NSString *)rawHexKey cipher:(NSString *)cipher withHMAC:(BOOL)useHMAC license:(NSString *)licenseKey {
     BOOL unlocked = NO;
     sqlite3 *db = nil;
     if (sqlite3_open([[self pathToDatabase] UTF8String], &db) == SQLITE_OK) {
@@ -527,6 +549,10 @@ static SQLCipherManager *sharedManager = nil;
         if (rawHexKey.length == 64) { // make sure we're at 64 characters
             NSString *sqlKey = [NSString stringWithFormat:@"PRAGMA key = \"x'%@'\"", rawHexKey];
             [self execute:sqlKey];
+        }
+        if (licenseKey) {
+            NSString *licensePragma = [NSString stringWithFormat:@"PRAGMA cipher_license = '%@';", licenseKey];
+            [self execute:licensePragma];
         }
         // both cipher and kdf_iter must be specified AFTER key
         if (cipher) {

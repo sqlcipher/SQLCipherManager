@@ -57,7 +57,9 @@ extern NSString * _Nonnull const SQLCipherManagerUserInfoQueryKey;
 - (void)createDatabaseWithPassword:(NSString *_Nonnull)password;
 - (void)createDatabaseWithPassword:(NSString *_Nonnull)password license:(NSString *_Nullable)licenseKey;
 - (BOOL)openDatabaseWithPassword:(NSString *_Nonnull)password;
+- (BOOL)openDatabaseWithPassword:(NSString *_Nonnull)password license:(NSString *_Nullable)licenseKey;
 - (BOOL)openDatabaseWithCachedPassword;
+- (BOOL)openDatabaseWithCachedPasswordAndLicense:(NSString *_Nullable)licenseKey;
 - (BOOL)openDatabaseWithOptions:(NSString *_Nonnull)password cipher:(NSString *_Nonnull)cipher iterations:(NSInteger)iterations;
 - (BOOL)openDatabaseWithOptions:(NSString *_Nonnull)password cipher:(NSString *_Nonnull)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC;
 - (BOOL)openDatabaseWithOptions:(NSString *_Nonnull)password cipher:(NSString *_Nonnull)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC license:(NSString *_Nullable)licenseKey;
@@ -74,8 +76,11 @@ extern NSString * _Nonnull const SQLCipherManagerUserInfoQueryKey;
 
 // Open, Close, and Re-Key using Raw Data
 - (void)createDatabaseWithRawData:(NSString *_Nonnull)rawHexKey;
+- (void)createDatabaseWithRawData:(NSString *_Nonnull)rawHexKey license:(NSString *_Nullable)licenseKey;
 - (BOOL)openDatabaseWithRawData:(NSString *_Nonnull)rawHexKey;
+- (BOOL)openDatabaseWithRawData:(NSString *_Nonnull)rawHexKey license:(NSString *_Nullable)licenseKey;
 - (BOOL)openDatabaseWithRawData:(NSString *_Nonnull)rawHexKey cipher:(NSString *_Nonnull)cipher withHMAC:(BOOL)useHMAC;
+- (BOOL)openDatabaseWithRawData:(NSString *_Nonnull)rawHexKey cipher:(NSString *_Nonnull)cipher withHMAC:(BOOL)useHMAC license:(NSString *_Nullable)licenseKey;
 - (BOOL)rekeyDatabaseWithRawData:(NSString *_Nonnull)rawHexKey;
 - (BOOL)rekeyDatabaseRawDataWithOptions:(NSString *_Nonnull)rawHexKey cipher:(NSString *_Nonnull)cipher iterations:(NSInteger)iterations error:(NSError *_Nullable*_Nullable)error;
 
