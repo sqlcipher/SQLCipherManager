@@ -31,7 +31,7 @@ static const void * const kDispatchQueueSpecificKey = &kDispatchQueueSpecificKey
 
 static SQLCipherManager *sharedManager = nil;
 
-- (id)init {
+- (instancetype)init {
     self = [super init];
     if (self != nil) {
         _useHMACPageProtection  = YES;
@@ -43,7 +43,7 @@ static SQLCipherManager *sharedManager = nil;
     return self;
 }
 
-- (id)initWithURL:(NSURL *)absoluteUrl {
+- (instancetype)initWithURL:(NSURL *)absoluteUrl {
     self = [self init];
     if (self != nil) {
         _databaseUrl = absoluteUrl;
@@ -51,7 +51,7 @@ static SQLCipherManager *sharedManager = nil;
     return self;
 }
 
-- (id)initWithPath:(NSString *)path {
+- (instancetype)initWithPath:(NSString *)path {
     NSURL *absoluteURL = [[NSURL alloc] initFileURLWithPath:path isDirectory:NO];
     return [self initWithURL:absoluteURL];
 }
