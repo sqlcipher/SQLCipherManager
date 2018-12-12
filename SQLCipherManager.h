@@ -16,6 +16,20 @@ extern NSString *_Nonnull const SQLCipherManagerUserInfoQueryKey;
 
 @class SQLCipherManager;
 
+typedef enum : NSUInteger {
+    PBKDF2_HMAC_ALGORITHM_DEFAULT,
+    PBKDF2_HMAC_ALGORITHM_SHA1,
+    PBKDF2_HMAC_ALGORITHM_SHA256,
+    PBKDF2_HMAC_ALGORITHM_SHA512,
+} PBKDF2_HMAC_ALGORITHM;
+
+typedef enum : NSUInteger {
+    HMAC_ALGORITHM_DEFAULT,
+    HMAC_ALGORITHM_SHA1,
+    HMAC_ALGORITHM_SHA256,
+    HMAC_ALGORITHM_SHA512,
+} HMAC_ALGORITHM;
+
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol SQLCipherManagerDelegate <NSObject>
@@ -65,6 +79,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *)cipher iterations:(NSInteger)iterations;
 - (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC;
 - (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC license:(NSString *_Nullable)licenseKey;
+- (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC pageSize:(NSInteger)pageSize license:(NSString *)license;
+- (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC pageSize:(NSInteger)pageSize kdfAlgo:(PBKDF2_HMAC_ALGORITHM)kdfAlgo license:(NSString *_Nullable)license;
+- (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC pageSize:(NSInteger)pageSize kdfAlgo:(PBKDF2_HMAC_ALGORITHM)kdfAlgo hmacAlgo:(HMAC_ALGORITHM)hmacAlgo license:(NSString *_Nullable)license;
 - (BOOL)openAndRekeyCFBDatabaseWithPassword:(NSString *)password __attribute__((deprecated));
 - (BOOL)rekeyDatabaseWithPassword:(NSString *)password;
 - (BOOL)rekeyDatabaseWithOptions:(NSString *)password

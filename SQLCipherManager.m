@@ -19,6 +19,8 @@ NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQu
 
 @interface SQLCipherManager ()
 - (void)sendError:(NSString *)error;
+- (NSString *)_nameForKdfAlgo:(PBKDF2_HMAC_ALGORITHM)kdfAlgo;
+- (NSString *)_nameForHmacAlgo:(HMAC_ALGORITHM)hmacAlgo;
 + (NSError *)errorWithSQLitePointer:(const char *)errorPointer;
 + (NSError *)errorUsingDatabase:(NSString *)problem reason:(NSString *)dbMessage;
 @end
@@ -227,6 +229,15 @@ static SQLCipherManager *sharedManager = nil;
 
 - (BOOL)openDatabaseWithOptions:(NSString *)password
                          cipher:(NSString *)cipher
+                     iterations:(NSInteger)iterations {
+    return [self openDatabaseWithOptions:password
+                                  cipher:cipher
+                              iterations:iterations
+                                withHMAC:self.useHMACPageProtection];
+}
+
+- (BOOL)openDatabaseWithOptions:(NSString *)password
+                         cipher:(NSString *)cipher
                      iterations:(NSInteger)iterations
                        withHMAC:(BOOL)useHMAC {
     return [self openDatabaseWithOptions:password
@@ -240,6 +251,55 @@ static SQLCipherManager *sharedManager = nil;
                          cipher:(NSString *)cipher
                      iterations:(NSInteger)iterations
                        withHMAC:(BOOL)useHMAC
+                        license:(NSString *)licenseKey {
+    // pass through and use default page size of current version of SQLCipher
+    return [self openDatabaseWithOptions:password
+                                  cipher:cipher
+                              iterations:iterations
+                                withHMAC:useHMAC
+                                pageSize:-1
+                                 license:licenseKey];
+}
+
+- (BOOL)openDatabaseWithOptions:(NSString *)password
+                         cipher:(NSString *)cipher
+                     iterations:(NSInteger)iterations
+                       withHMAC:(BOOL)useHMAC
+                       pageSize:(NSInteger)pageSize
+                        license:(NSString *)licenseKey {
+    return [self openDatabaseWithOptions:password
+                                  cipher:cipher
+                              iterations:iterations
+                                withHMAC:useHMAC
+                                pageSize:pageSize
+                                 kdfAlgo:PBKDF2_HMAC_ALGORITHM_DEFAULT
+                                 license:licenseKey];
+}
+
+- (BOOL)openDatabaseWithOptions:(NSString *)password
+                         cipher:(NSString *)cipher
+                     iterations:(NSInteger)iterations
+                       withHMAC:(BOOL)useHMAC
+                       pageSize:(NSInteger)pageSize
+                        kdfAlgo:(PBKDF2_HMAC_ALGORITHM)kdfAlgo
+                        license:(NSString *)licenseKey {
+    return [self openDatabaseWithOptions:password
+                                  cipher:cipher
+                              iterations:iterations
+                                withHMAC:useHMAC
+                                pageSize:pageSize
+                                 kdfAlgo:kdfAlgo
+                                hmacAlgo:HMAC_ALGORITHM_DEFAULT
+                                 license:licenseKey];
+}
+
+- (BOOL)openDatabaseWithOptions:(NSString *)password
+                         cipher:(NSString *)cipher
+                     iterations:(NSInteger)iterations
+                       withHMAC:(BOOL)useHMAC
+                       pageSize:(NSInteger)pageSize
+                        kdfAlgo:(PBKDF2_HMAC_ALGORITHM)kdfAlgo
+                       hmacAlgo:(HMAC_ALGORITHM)hmacAlgo
                         license:(NSString *)licenseKey {
     BOOL unlocked = NO;
     BOOL newDatabase = NO;
@@ -270,6 +330,25 @@ static SQLCipherManager *sharedManager = nil;
         if (iterations > 0) {
             [self execute:[NSString stringWithFormat:@"PRAGMA kdf_iter='%d';", (int)iterations] error:NULL];
         }
+        // check if we have a page size (-1 indicates use the default)
+        // make sure we're in between valid sqlite page sizes and that we're a power of 2
+        if (pageSize >= 512 && pageSize <= 65536 && (pageSize & (pageSize -1)) == 0) {
+            NSString *pageSizePragma = [NSString stringWithFormat:@"PRAGMA cipher_page_size = '%li';", pageSize];
+            [self execute:pageSizePragma];
+        } else if (pageSize != -1) { // unless we supplied -1 (use default page size) log an error
+            NSLog(@">> Invalid Page Size supplied (%li), ignoring", pageSize);
+        }
+        // if it's not the default kdf algo, make sure to apply the pragma
+        NSString *nameForKdfAlgo = [self _nameForKdfAlgo:kdfAlgo];
+        // we only return non-nill here if it's a valid algo
+        if (nameForKdfAlgo) {
+            [self execute:[NSString stringWithFormat:@"PRAGMA cipher_kdf_algorithm = %@;", nameForKdfAlgo]];
+        }
+        // now see if an hmac algo is specified
+        NSString *nameForHmacAlgo = [self _nameForHmacAlgo:hmacAlgo];
+        if (nameForHmacAlgo) {
+            [self execute:[NSString stringWithFormat:@"PRAGMA cipher_hmac_algorithm = %@;", nameForHmacAlgo]];
+        }
         unlocked = [self isDatabaseUnlocked];
         if (unlocked == NO) {
             sqlite3_close(self.database);
@@ -291,13 +370,42 @@ static SQLCipherManager *sharedManager = nil;
     return unlocked;
 }
 
-- (BOOL)openDatabaseWithOptions:(NSString *)password
-                         cipher:(NSString *)cipher
-                     iterations:(NSInteger)iterations {
-    return [self openDatabaseWithOptions:password
-                                  cipher:cipher
-                              iterations:iterations
-                                withHMAC:self.useHMACPageProtection];
+- (NSString *)_nameForKdfAlgo:(PBKDF2_HMAC_ALGORITHM)kdfAlgo {
+    NSString *name = nil;
+    switch (kdfAlgo) {
+        case PBKDF2_HMAC_ALGORITHM_DEFAULT:
+            // no op, we can just leave the name as nil
+            break;
+        case PBKDF2_HMAC_ALGORITHM_SHA1:
+            name = @"PBKDF2_HMAC_SHA1";
+            break;
+        case PBKDF2_HMAC_ALGORITHM_SHA256:
+            name = @"PBKDF2_HMAC_SHA256";
+            break;
+        case PBKDF2_HMAC_ALGORITHM_SHA512:
+            name = @"PBKDF2_HMAC_SHA512";
+            break;
+    }
+    return name;
+}
+
+- (NSString *)_nameForHmacAlgo:(HMAC_ALGORITHM)hmacAlgo {
+    NSString *name = nil;
+    switch (hmacAlgo) {
+        case HMAC_ALGORITHM_DEFAULT:
+            // no-op leave it as the deafult nil
+            break;
+        case HMAC_ALGORITHM_SHA1:
+            name = @"HMAC_SHA1";
+            break;
+        case HMAC_ALGORITHM_SHA256:
+            name = @"HMAC_SHA256";
+            break;
+        case HMAC_ALGORITHM_SHA512:
+            name = @"HMAC_SHA512";
+            break;
+    }
+    return name;
 }
 
 - (BOOL)rekeyDatabaseWithPassword:(NSString *)password {
