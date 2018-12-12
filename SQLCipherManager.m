@@ -35,7 +35,7 @@ static SQLCipherManager *sharedManager = nil;
     self = [super init];
     if (self != nil) {
         _useHMACPageProtection  = YES;
-        _kdfIterations          = 256000;
+        _kdfIterations          = -1; // negative one indicates don't modify the kdfIterations from the default of what version of SQLCipher
         // set up a serial dispatch queue for database operations
         _serialQueue            = dispatch_queue_create([[NSString stringWithFormat:@"SQLCipher.%@", self] UTF8String], NULL);
         dispatch_queue_set_specific(_serialQueue, kDispatchQueueSpecificKey, (__bridge void *)self, NULL);
@@ -202,10 +202,10 @@ static SQLCipherManager *sharedManager = nil;
     
     if (unlocked == YES) {
         NSLog(@"initiating re-key to new settings");
-        unlocked = [self rekeyDatabaseWithOptions: password
-                                           cipher: AES_CBC
-                                       iterations: self.kdfIterations
-                                            error: &error];
+        unlocked = [self rekeyDatabaseWithOptions:password
+                                           cipher:AES_CBC
+                                       iterations:self.kdfIterations
+                                            error:&error];
         if (!unlocked && error) {
             NSLog(@"error re-keying database: %@", error);
         }
@@ -267,7 +267,7 @@ static SQLCipherManager *sharedManager = nil;
         if (cipher) {
             [self execute:[NSString stringWithFormat:@"PRAGMA cipher='%@';", cipher] error:NULL];
         }
-        if (iterations) {
+        if (iterations > 0) {
             [self execute:[NSString stringWithFormat:@"PRAGMA kdf_iter='%d';", (int)iterations] error:NULL];
         }
         unlocked = [self isDatabaseUnlocked];
