@@ -79,7 +79,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *)cipher iterations:(NSInteger)iterations;
 - (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC;
 - (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC license:(NSString *_Nullable)licenseKey;
-- (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC pageSize:(NSInteger)pageSize license:(NSString *)license;
+- (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC pageSize:(NSInteger)pageSize license:(NSString *_Nullable)license;
 - (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC pageSize:(NSInteger)pageSize kdfAlgo:(PBKDF2_HMAC_ALGORITHM)kdfAlgo license:(NSString *_Nullable)license;
 - (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC pageSize:(NSInteger)pageSize kdfAlgo:(PBKDF2_HMAC_ALGORITHM)kdfAlgo hmacAlgo:(HMAC_ALGORITHM)hmacAlgo license:(NSString *_Nullable)license;
 - (BOOL)openAndRekeyCFBDatabaseWithPassword:(NSString *)password __attribute__((deprecated));
