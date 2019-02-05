@@ -1325,6 +1325,13 @@ static SQLCipherManager *sharedManager = nil;
     }
 }
 
+#pragma mark - Table Exists
+
+- (BOOL)tableExists:(NSString *)tableName {
+    NSString *tableNameCountQuery = [NSString stringWithFormat:@"SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = '%@';", tableName];
+    return [self countForSQL:tableNameCountQuery] > 0;
+}
+
 - (void)dealloc {
     if(_cachedPassword) {
         memset((void *)[_cachedPassword UTF8String], 0, [_cachedPassword length]);

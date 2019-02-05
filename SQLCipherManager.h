@@ -139,7 +139,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (dispatch_queue_t)serialQueue;
 - (void)inQueue:(void (^)(SQLCipherManager *manager))block;
 - (void)inQueueAsync:(void (^)(SQLCipherManager *manager))block;
-
+- (BOOL)tableExists:(NSString *)tableName;
 
 /**
  Runs a SQL query and returns the results as an NSArray, each item of which is an NSArray representing a result row.
