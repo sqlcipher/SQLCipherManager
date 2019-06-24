@@ -135,6 +135,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSString *_Nullable)getScalar:(NSString *)query with:(NSArray *_Nullable)params;
 - (NSData *_Nullable)getBlobWith:(NSString *)query;
 - (NSInteger)countForSQL:(NSString *)countSQL;
+- (NSInteger)countForSQL:(NSString *)countSQL with:(NSArray *)params;
 - (NSInteger)countForTable:(NSString *)tableName;
 - (dispatch_queue_t)serialQueue;
 - (void)inQueue:(void (^)(SQLCipherManager *manager))block;

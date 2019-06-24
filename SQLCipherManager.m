@@ -1233,6 +1233,12 @@ static SQLCipherManager *sharedManager = nil;
     return count;
 }
 
+- (NSInteger)countForSQL:(NSString *)countSQL with:(NSArray *)params {
+    NSString *scalar = [self getScalar:countSQL with:params];
+    NSInteger count = [scalar integerValue];
+    return count;
+}
+
 - (NSInteger)countForTable:(NSString *)tableName {
     return [self countForSQL: [NSString stringWithFormat:@"SELECT COUNT(*) FROM %@;", tableName]];
 }
