@@ -886,6 +886,7 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (BOOL)restoreDatabaseFromFileAtPath:(NSString *)path error:(NSError **)error {
+    BOOL success = NO;
     NSFileManager *fm = [NSFileManager defaultManager];
     // get the db paths
     NSString *dbPath = [self pathToDatabase];
@@ -895,24 +896,37 @@ static SQLCipherManager *sharedManager = nil;
         if (error != NULL) {
             *error = [[self class] errorUsingDatabase:@"Unable to restore from rollback database" reason:@"Missing file to replace"];
         }
-        return NO;
+        return success;
     }
     if ([fm fileExistsAtPath:backupPath] == NO) {
         if (error != NULL) {
             *error = [[self class] errorUsingDatabase:@"Unable to restore from rollback database" reason:@"Missing rollback database file"];
         }
-        return NO;
+        return success;
     }
-    // remove the original to make way for the backup
-    NSLog(@"removing the file at the primary database path...");
-    if ([fm removeItemAtPath:dbPath error:error]) {
-        // now move the backup to the original location
-        NSLog(@"moving the backup file into the primary database path...");
-        if ([fm copyItemAtPath:backupPath toPath:dbPath error:error]) {
-            return YES;
+    // first create a temporary copy of the database file in case our move fails
+    NSString *tempPath = [dbPath stringByAppendingString:@".temp"];
+    if ([fm copyItemAtPath:dbPath toPath:tempPath error:error]) {
+        // remove the original to make way for the backup
+        NSLog(@"removing the file at the primary database path...");
+        if ([fm removeItemAtPath:dbPath error:error]) {
+            // now move the backup to the original location
+            NSLog(@"moving the backup file into the primary database path...");
+            if ([fm copyItemAtPath:backupPath toPath:dbPath error:error]) {
+                success = YES;
+            }
         }
     }
-    return NO;
+    if (success == NO) {
+        // only move the temp db into place if the database removal was successful
+        if ([fm fileExistsAtPath:dbPath] == NO) {
+            // we don't want to grab the error from here, as we want to report the error from above
+            [fm copyItemAtPath:tempPath toPath:dbPath error:nil];
+        }
+    }
+    // we don't want to grab the error from here, as we want to report the error from above
+    [fm removeItemAtPath:tempPath error:nil];
+    return success;
 }
 
 - (BOOL)createReplicaAtPath:(NSString *)path {
