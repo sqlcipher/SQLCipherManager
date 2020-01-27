@@ -128,6 +128,17 @@ static SQLCipherManager *sharedManager = nil;
     return [NSError errorWithDomain:SQLCipherManagerErrorDomain code:ERR_SQLCIPHER_COMMAND_FAILED userInfo:userInfo];
 }
 
++ (NSError *)errorForResultCode:(NSInteger)resultCode {
+    NSString *description = @"Database error occurred";
+    NSString *reason = [NSString localizedStringWithFormat:NSLocalizedString(@"Result Code: %li","Result Code: [error result code]"), resultCode];
+    const char *errorMsgFromRc = sqlite3_errstr((int)resultCode);
+    if (errorMsgFromRc != NULL) {
+        reason = [NSString stringWithUTF8String:errorMsgFromRc];
+    }
+    NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:description, NSLocalizedDescriptionKey, reason, NSLocalizedFailureReasonErrorKey, nil];
+    return [NSError errorWithDomain:SQLCipherManagerErrorDomain code:resultCode userInfo:userInfo];
+}
+
 + (id)sharedManager {
     if (sharedManager == nil) {
         sharedManager = [[self alloc] init];
