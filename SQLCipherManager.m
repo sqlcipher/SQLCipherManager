@@ -114,29 +114,40 @@ static SQLCipherManager *sharedManager = nil;
 + (NSError *)errorWithSQLitePointer:(const char *)errorPointer {
     NSString *errMsg = [NSString stringWithCString:errorPointer encoding:NSUTF8StringEncoding];
     NSString *description = @"An error occurred executing a SQL statement";
-    NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:description, NSLocalizedDescriptionKey, errMsg, NSLocalizedFailureReasonErrorKey, nil];
-    return [[NSError alloc] initWithDomain:SQLCipherManagerErrorDomain
-                                       code:ERR_SQLCIPHER_COMMAND_FAILED
-                                   userInfo:userInfo];
+    return [self errorWithDescription:description reason:errMsg];
 }
 
 + (NSError *)errorUsingDatabase:(NSString *)problem reason:(NSString *)dbMessage {
     NSString *failureReason = [NSString stringWithFormat:@"DB command failed: '%@'", dbMessage];
-    NSArray *objsArray = [NSArray arrayWithObjects: problem, failureReason, nil];
-    NSArray *keysArray = [NSArray arrayWithObjects: NSLocalizedDescriptionKey, NSLocalizedFailureReasonErrorKey, nil];
-    NSDictionary *userInfo = [NSDictionary dictionaryWithObjects:objsArray forKeys:keysArray];
-    return [NSError errorWithDomain:SQLCipherManagerErrorDomain code:ERR_SQLCIPHER_COMMAND_FAILED userInfo:userInfo];
+    return [self errorWithDescription:problem reason:failureReason];
 }
 
 + (NSError *)errorForResultCode:(NSInteger)resultCode {
-    NSString *description = @"Database error occurred";
-    NSString *reason = [NSString localizedStringWithFormat:NSLocalizedString(@"Result Code: %li","Result Code: [error result code]"), resultCode];
-    const char *errorMsgFromRc = sqlite3_errstr((int)resultCode);
-    if (errorMsgFromRc != NULL) {
-        reason = [NSString stringWithUTF8String:errorMsgFromRc];
+    return [self errorForResultCode:resultCode reason:nil];
+}
+
++ (NSError *)errorForResultCode:(NSInteger)resultCode reason:(NSString * _Nullable)localizedReason {
+    NSString *description = [NSString localizedStringWithFormat:NSLocalizedString(@"A database error has occurred, result code %li", @"Database error messsage with error code"), resultCode];
+    NSString *reason = nil;
+    if (localizedReason != nil) {
+        reason = localizedReason;
+    } else {
+        const char *errorMsgFromRc = sqlite3_errstr((int)resultCode);
+        if (errorMsgFromRc != NULL) {
+            reason = [NSString stringWithUTF8String:errorMsgFromRc];
+        }
     }
-    NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:description, NSLocalizedDescriptionKey, reason, NSLocalizedFailureReasonErrorKey, nil];
-    return [NSError errorWithDomain:SQLCipherManagerErrorDomain code:resultCode userInfo:userInfo];
+    return [self errorWithDescription:description reason:reason];
+}
+
++ (NSError *)errorWithDescription:(NSString *)localizedDescription reason:(NSString * _Nullable)localizedReason {
+    NSMutableDictionary *info = [NSMutableDictionary dictionaryWithDictionary:@{NSLocalizedDescriptionKey: localizedDescription}];
+    if (localizedReason != nil) {
+        [info setObject:localizedReason forKey:NSLocalizedFailureReasonErrorKey];
+    }
+    return [NSError errorWithDomain:SQLCipherManagerErrorDomain
+                               code:ERR_SQLCIPHER_COMMAND_FAILED
+                           userInfo:info];
 }
 
 + (id)sharedManager {

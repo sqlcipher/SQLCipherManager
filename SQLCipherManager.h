@@ -154,7 +154,10 @@ NS_ASSUME_NONNULL_BEGIN
                                     with:(NSArray *_Nullable)params
                                    error:(NSError *_Nullable*_Nullable)error;
 
+
 + (NSError *)errorForResultCode:(NSInteger)resultCode;
++ (NSError *)errorForResultCode:(NSInteger)resultCode reason:(NSString * _Nullable)localizedReason;
++ (NSError *)errorWithDescription:(NSString *)localizedDescription reason:(NSString * _Nullable)localizedReason;
 
 @end
 
