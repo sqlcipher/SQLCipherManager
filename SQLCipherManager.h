@@ -112,6 +112,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)restoreDatabaseFromRollback:(NSError *_Nullable*_Nullable)error;
 - (BOOL)removeRollbackDatabase:(NSError *_Nullable*_Nullable)error;
 - (BOOL)restoreDatabaseFromFileAtPath:(NSString *)path error:(NSError *_Nullable*_Nullable)error;
+- (BOOL)restoreDatabaseFromFileAtPath:(NSString *)path error:(NSError *_Nullable*_Nullable)error requiresMainDbFilePresent:(BOOL)requiresMainDbPresent;
 - (BOOL)createReplicaAtPath:(NSString *)path;
 - (BOOL)createRollbackDatabase:(NSError *_Nullable*_Nullable)error;
 - (BOOL)copyDatabaseToPath:(NSString *)path error:(NSError *_Nullable*_Nullable)error;
