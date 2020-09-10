@@ -7,7 +7,12 @@
 //
 
 #import <Foundation/Foundation.h>
+#ifdef ZETETIC_SQLCIPHER_MANAGER_IN_FRAMEWORK
+#import <ZTDataModel/sqlite3.h>
+#else
 #import "sqlite3.h"
+#endif
+
 
 #define ERR_SQLCIPHER_COMMAND_FAILED 1
 
