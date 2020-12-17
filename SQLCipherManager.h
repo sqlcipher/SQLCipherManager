@@ -165,6 +165,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSError *)errorForResultCode:(NSInteger)resultCode reason:(NSString * _Nullable)localizedReason;
 + (NSError *)errorWithDescription:(NSString *)localizedDescription reason:(NSString * _Nullable)localizedReason;
 
+- (BOOL)isDatabaseAttachedNamed:(NSString *)databaseName;
+
 @end
 
 NS_ASSUME_NONNULL_END

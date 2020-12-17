@@ -13,6 +13,9 @@
 
 #define AES_CBC @"aes-256-cbc"
 
+// database name column for database_list
+#define ATTACHED_DATABASE_NAME_COLUMN 1
+
 NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 NSString * const SQLCipherManagerCommandException = @"SQLCipherManagerCommandException";
 NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQueryKey";
@@ -1386,6 +1389,29 @@ static SQLCipherManager *sharedManager = nil;
 - (BOOL)tableExists:(NSString *)tableName {
     NSString *tableNameCountQuery = [NSString stringWithFormat:@"SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = '%@';", tableName];
     return [self countForSQL:tableNameCountQuery] > 0;
+}
+
+- (BOOL)isDatabaseAttachedNamed:(NSString *)databaseName {
+    BOOL attached = NO;
+    sqlite3_stmt *stmt;
+    @try {
+        NSString *databaseListQuery = @"PRAGMA database_list";
+        if (sqlite3_prepare(self.database, [databaseListQuery UTF8String], -1, &stmt, NULL) == SQLITE_OK) {
+            const unsigned char * cValue;
+            NSString *val = nil;
+            while (sqlite3_step(stmt) == SQLITE_ROW) {
+                cValue = sqlite3_column_text(stmt, ATTACHED_DATABASE_NAME_COLUMN); // the db name that's attached
+                val = cValue != NULL ? [NSString stringWithUTF8String:(char *)cValue] : nil;
+                if ([val isEqualToString:databaseName]) { // if we found our changesets db attached
+                    attached = YES;
+                    break;
+                }
+            }
+        }
+    } @finally {
+        sqlite3_finalize(stmt);
+    }
+    return attached;
 }
 
 - (void)dealloc {
