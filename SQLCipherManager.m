@@ -1414,6 +1414,10 @@ static SQLCipherManager *sharedManager = nil;
     return attached;
 }
 
+- (NSInteger)numberOfRowsChangedByLastCommand {
+    return sqlite3_changes(self.database);
+}
+
 - (void)dealloc {
     if(_cachedPassword) {
         memset((void *)[_cachedPassword UTF8String], 0, [_cachedPassword length]);

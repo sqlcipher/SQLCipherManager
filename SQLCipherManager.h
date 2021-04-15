@@ -166,6 +166,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSError *)errorWithDescription:(NSString *)localizedDescription reason:(NSString * _Nullable)localizedReason;
 
 - (BOOL)isDatabaseAttachedNamed:(NSString *)databaseName;
+- (NSInteger)numberOfRowsChangedByLastCommand;
 
 @end
 
