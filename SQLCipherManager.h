@@ -64,6 +64,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property (weak, nonatomic, readonly, nullable) NSString *cipherVersion;
 @property (weak, nonatomic, readonly, nullable) NSString *cipherProvider;
 
+@property (readonly) NSInteger freeListCount;
+@property (readonly) NSInteger pageCount;
+@property (readonly) float freeListRatio;
+
 - (instancetype)initWithURL:(NSURL *)absoluteUrl;
 - (instancetype)initWithPath:(NSString *)path; // DEPRECATED
 + (instancetype)sharedManager;
@@ -167,6 +171,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)isDatabaseAttachedNamed:(NSString *)databaseName;
 - (NSInteger)numberOfRowsChangedByLastCommand;
+
+/// Vacuums the database.
+///
+/// @Warning Must not be called in a transaction.
+/// @See `freeListCount`, `pageCount`, `freeListRatio`.
+- (void)vacuum;
 
 @end
 
