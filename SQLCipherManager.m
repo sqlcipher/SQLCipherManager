@@ -34,6 +34,10 @@ static const void * const kDispatchQueueSpecificKey = &kDispatchQueueSpecificKey
 // needs to be synthesized since we're implementing both the getter and setter (Control is ours!)
 @synthesize cachedPassword = _cachedPassword;
 
+@dynamic freeListCount;
+@dynamic pageCount;
+@dynamic freeListRatio;
+
 static SQLCipherManager *sharedManager = nil;
 
 - (instancetype)init {
@@ -1422,6 +1426,22 @@ static SQLCipherManager *sharedManager = nil;
 
 - (NSInteger)numberOfRowsChangedByLastCommand {
     return sqlite3_changes(self.database);
+}
+
+- (NSInteger)freeListCount {
+    return [[self getScalar:@"PRAGMA freelist_count;"] integerValue];
+}
+
+- (NSInteger)pageCount {
+    return [[self getScalar:@"PRAGMA page_count;"] integerValue];
+}
+
+- (float)freeListRatio {
+    return (float)self.freeListCount / (float)self.pageCount;
+}
+
+- (void)vacuum {
+    [self execute:@"VACUUM;"];
 }
 
 - (void)dealloc {
