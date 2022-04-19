@@ -344,12 +344,6 @@ static SQLCipherManager *sharedManager = nil;
         } else {
             [self execute:@"PRAGMA cipher_default_use_hmac = ON;" error:NULL];
         }
-        // Enable Memory Security
-        /*
-         Memory Security was introduced in SQLCipher 4.0, but is no longer enabled by default in 4.5,
-         so we enable it here.
-         */
-        [self execute:@"PRAGMA cipher_memory_security = ON;"];
         // submit the password
         const char *key = [password UTF8String];
         sqlite3_key(self.database, key, (int)strlen(key));
