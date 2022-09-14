@@ -338,6 +338,7 @@ static SQLCipherManager *sharedManager = nil;
     sqlite3 *db = nil;
     if (sqlite3_open([[self pathToDatabase] UTF8String], &db) == SQLITE_OK) {
         self.database = db;
+        [self execute:@"PRAGMA foreign_keys = ON;" error:NULL];
         // HMAC page protection is enabled by default in SQLCipher 2.0
         if (useHMAC == NO) {
             [self execute:@"PRAGMA cipher_default_use_hmac = OFF;" error:NULL];
