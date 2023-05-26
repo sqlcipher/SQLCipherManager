@@ -19,13 +19,15 @@
 NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 NSString * const SQLCipherManagerCommandException = @"SQLCipherManagerCommandException";
 NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQueryKey";
+NSString * const SQLCipherManagerUserInfoErrorCodeKey = @"SQLCipherManagerUserInfoErrorCodeKey";
 
 @interface SQLCipherManager ()
 - (void)sendError:(NSString *)error;
 - (NSString *)_nameForKdfAlgo:(PBKDF2_HMAC_ALGORITHM)kdfAlgo;
 - (NSString *)_nameForHmacAlgo:(HMAC_ALGORITHM)hmacAlgo;
-+ (NSError *)errorWithSQLitePointer:(const char *)errorPointer;
-+ (NSError *)errorUsingDatabase:(NSString *)problem reason:(NSString *)dbMessage;
++ (NSError *)errorWithSQLitePointer:(const char *)errorPointer resultCode:(NSInteger)resultCode;
++ (NSError *)errorUsingDatabase:(NSString *)problem reason:(NSString *)dbMessage resultCode:(NSInteger)resultCode;
++ (NSException *)_exceptionForError:(NSError *)error;
 @end
 
 static const void * const kDispatchQueueSpecificKey = &kDispatchQueueSpecificKey;
@@ -118,15 +120,15 @@ static SQLCipherManager *sharedManager = nil;
     }
 }
 
-+ (NSError *)errorWithSQLitePointer:(const char *)errorPointer {
++ (NSError *)errorWithSQLitePointer:(const char *)errorPointer resultCode:(NSInteger)resultCode {
     NSString *errMsg = [NSString stringWithCString:errorPointer encoding:NSUTF8StringEncoding];
     NSString *description = @"An error occurred executing a SQL statement";
-    return [self errorWithDescription:description reason:errMsg];
+    return [self errorWithDescription:description reason:errMsg resultCode:resultCode];
 }
 
-+ (NSError *)errorUsingDatabase:(NSString *)problem reason:(NSString *)dbMessage {
++ (NSError *)errorUsingDatabase:(NSString *)problem reason:(NSString *)dbMessage resultCode:(NSInteger)resultCode {
     NSString *failureReason = [NSString stringWithFormat:@"DB command failed: '%@'", dbMessage];
-    return [self errorWithDescription:problem reason:failureReason];
+    return [self errorWithDescription:problem reason:failureReason resultCode:resultCode];
 }
 
 + (NSError *)errorForResultCode:(NSInteger)resultCode {
@@ -144,17 +146,25 @@ static SQLCipherManager *sharedManager = nil;
             reason = [NSString stringWithUTF8String:errorMsgFromRc];
         }
     }
-    return [self errorWithDescription:description reason:reason];
+    return [self errorWithDescription:description reason:reason resultCode:resultCode];
 }
 
-+ (NSError *)errorWithDescription:(NSString *)localizedDescription reason:(NSString * _Nullable)localizedReason {
++ (NSError *)errorWithDescription:(NSString *)localizedDescription reason:(NSString * _Nullable)localizedReason resultCode:(NSInteger)resultCode {
     NSMutableDictionary *info = [NSMutableDictionary dictionaryWithDictionary:@{NSLocalizedDescriptionKey: localizedDescription}];
     if (localizedReason != nil) {
         [info setObject:localizedReason forKey:NSLocalizedFailureReasonErrorKey];
     }
     return [NSError errorWithDomain:SQLCipherManagerErrorDomain
-                               code:ERR_SQLCIPHER_COMMAND_FAILED
+                               code:resultCode
                            userInfo:info];
+}
+
++ (NSException *)_exceptionForError:(NSError *)error {
+    // also add the result code (now passed within as the error code) to the userInfo dictionary
+    NSMutableDictionary *userInfoDictionary = [NSMutableDictionary dictionaryWithDictionary:[error userInfo]];
+    [userInfoDictionary setObject:@(error.code) forKey:SQLCipherManagerUserInfoErrorCodeKey];
+    NSDictionary *completeUserInfoDictionary = [NSDictionary dictionaryWithDictionary:userInfoDictionary];
+    return [NSException exceptionWithName:SQLCipherManagerCommandException reason:[error localizedFailureReason] userInfo:completeUserInfoDictionary];
 }
 
 + (id)sharedManager {
@@ -505,7 +515,8 @@ static SQLCipherManager *sharedManager = nil;
             // setup the error object
             if (error != NULL) {
                 *error = [SQLCipherManager errorUsingDatabase:@"Unable to set rekey.cipher"
-                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]];
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]
+                                                   resultCode:rc];
             }
         }
     }
@@ -519,7 +530,8 @@ static SQLCipherManager *sharedManager = nil;
             // setup the error object
             if (error != NULL) {
                 *error = [SQLCipherManager errorUsingDatabase:@"Unable to set rekey.kdf_iter"
-                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]];
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]
+                                                   resultCode:rc];
             }
         }
     }
@@ -533,7 +545,8 @@ static SQLCipherManager *sharedManager = nil;
             // setup the error object
             if (error != NULL) {
                 *error = [SQLCipherManager errorUsingDatabase:@"Unable to copy data to rekey database"
-                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]];
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]
+                                                   resultCode:rc];
             }
         }
         // we need to update the user version, too
@@ -545,7 +558,8 @@ static SQLCipherManager *sharedManager = nil;
             // setup the error object
             if (error != NULL) {
                 *error = [SQLCipherManager errorUsingDatabase:@"Unable to set user version"
-                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]];
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]
+                                                   resultCode:rc];
             }
         }
     }
@@ -558,7 +572,8 @@ static SQLCipherManager *sharedManager = nil;
             // setup the error object
             if (error != NULL) {
                 *error = [SQLCipherManager errorUsingDatabase:@"Unable to detach rekey database"
-                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]];
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]
+                                                   resultCode:rc];
             }
         }
     }
@@ -578,7 +593,8 @@ static SQLCipherManager *sharedManager = nil;
             failed = YES;
             if (error != NULL) {
                 *error = [SQLCipherManager errorUsingDatabase:@"Unable to open database after moving rekey into place"
-                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]];
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]
+                                                   resultCode:ERR_SQLCIPHER_COMMAND_FAILED];
             }
         }
 	}
@@ -643,7 +659,8 @@ static SQLCipherManager *sharedManager = nil;
         return YES;
     } else {
         if (error != NULL) {
-            *error = [[self class] errorUsingDatabase:@"Unable to re-open database" reason:@"Unable to open database with cached password"];
+            *error = [[self class] errorUsingDatabase:@"Unable to re-open database" reason:@"Unable to open database with cached password"
+            resultCode:ERR_SQLCIPHER_COMMAND_FAILED];
         }
         return NO;
     }
@@ -775,7 +792,8 @@ static SQLCipherManager *sharedManager = nil;
             // setup the error object
             if (error != NULL) {
                 *error = [SQLCipherManager errorUsingDatabase:@"Unable to set rekey.cipher"
-                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]];
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]
+                                                   resultCode:rc];
             }
         }
     }
@@ -789,7 +807,8 @@ static SQLCipherManager *sharedManager = nil;
             // setup the error object
             if (error != NULL) {
                 *error = [SQLCipherManager errorUsingDatabase:@"Unable to set rekey.kdf_iter"
-                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]];
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]
+                                                   resultCode:rc];
             }
         }
     }
@@ -803,7 +822,8 @@ static SQLCipherManager *sharedManager = nil;
             // setup the error object
             if (error != NULL) {
                 *error = [SQLCipherManager errorUsingDatabase:@"Unable to copy data to rekey database"
-                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]];
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]
+                                                   resultCode:rc];
             }
         }
         // we need to update the user version, too
@@ -815,7 +835,8 @@ static SQLCipherManager *sharedManager = nil;
             // setup the error object
             if (error != NULL) {
                 *error = [SQLCipherManager errorUsingDatabase:@"Unable to set user version"
-                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]];
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]
+                                                   resultCode:rc];
             }
         }
     }
@@ -828,7 +849,8 @@ static SQLCipherManager *sharedManager = nil;
             // setup the error object
             if (error != NULL) {
                 *error = [SQLCipherManager errorUsingDatabase:@"Unable to detach rekey database"
-                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]];
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]
+                                                   resultCode:rc];
             }
         }
     }
@@ -845,7 +867,8 @@ static SQLCipherManager *sharedManager = nil;
             failed = YES;
             if (error != NULL) {
                 *error = [SQLCipherManager errorUsingDatabase:@"Unable to open database after moving rekey into place"
-                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]];
+                                                       reason:[NSString stringWithUTF8String:sqlite3_errmsg(self.database)]
+                                                   resultCode:ERR_SQLCIPHER_COMMAND_FAILED];
             }
         }
     }
@@ -930,13 +953,13 @@ static SQLCipherManager *sharedManager = nil;
     // only insist that the main db file is present if our flag is set to YES
     if (mainDbFileExists == NO && requiresMainDbPresent) {
         if (error != NULL) {
-            *error = [[self class] errorUsingDatabase:@"Unable to restore from rollback database" reason:@"Missing file to replace"];
+            *error = [[self class] errorUsingDatabase:@"Unable to restore from rollback database" reason:@"Missing file to replace" resultCode:ERR_SQLCIPHER_COMMAND_FAILED];
         }
         return success;
     }
     if ([fm fileExistsAtPath:backupPath] == NO) {
         if (error != NULL) {
-            *error = [[self class] errorUsingDatabase:@"Unable to restore from rollback database" reason:@"Missing rollback database file"];
+            *error = [[self class] errorUsingDatabase:@"Unable to restore from rollback database" reason:@"Missing rollback database file" resultCode:ERR_SQLCIPHER_COMMAND_FAILED];
         }
         return success;
     }
@@ -1087,8 +1110,7 @@ static SQLCipherManager *sharedManager = nil;
 - (void)execute:(NSString *)sqlCommand {
     NSError *error = nil;
     if ([self execute:sqlCommand error:&error] != YES) {
-        NSException *e = [NSException exceptionWithName:SQLCipherManagerCommandException reason:[error localizedFailureReason] userInfo:[error userInfo]];
-        @throw e;
+        @throw [[self class] _exceptionForError:error];
     }
 }
 
@@ -1099,13 +1121,13 @@ static SQLCipherManager *sharedManager = nil;
     if (rc != SQLITE_OK) {
         if (errorPointer) {
             if (error != NULL) {
-                *error = [[self class] errorWithSQLitePointer:errorPointer];
+                *error = [[self class] errorWithSQLitePointer:errorPointer resultCode:rc];
             }
             sqlite3_free(errorPointer);
         } else {
             if (error != NULL) {
                 *error = [[NSError alloc] initWithDomain:SQLCipherManagerErrorDomain
-                                                    code:ERR_SQLCIPHER_COMMAND_FAILED
+                                                    code:rc
                                                 userInfo:@{NSLocalizedDescriptionKey : @"Unknown SQL Error"}];
             }
         }
@@ -1143,10 +1165,7 @@ static SQLCipherManager *sharedManager = nil;
     BOOL success = [self execute:sqlCommand error:&error withArguments:params];
     if (success == NO) {
         if (error != NULL) {
-            NSException *e = [NSException exceptionWithName:SQLCipherManagerCommandException
-                                                     reason:[error localizedFailureReason]
-                                                   userInfo:[error userInfo]];
-            @throw e;
+            @throw [[self class] _exceptionForError:error];
         }
     }
 }
@@ -1179,7 +1198,7 @@ static SQLCipherManager *sharedManager = nil;
             success = NO;
             if (error != NULL) {
                 const char *errorMessage = sqlite3_errmsg(self.database);
-                NSError *errorObj = [[self class] errorWithSQLitePointer:errorMessage];
+                NSError *errorObj = [[self class] errorWithSQLitePointer:errorMessage resultCode:rc];
                 *error = errorObj;
             }
         }
@@ -1187,7 +1206,7 @@ static SQLCipherManager *sharedManager = nil;
         success = NO;
         if (error != NULL) {
             const char *errorMessage = sqlite3_errmsg(self.database);
-            NSError *errorObj = [[self class] errorWithSQLitePointer:errorMessage];
+            NSError *errorObj = [[self class] errorWithSQLitePointer:errorMessage resultCode:ERR_SQLCIPHER_COMMAND_FAILED];
             *error = errorObj;
         }
     }
@@ -1235,6 +1254,8 @@ static SQLCipherManager *sharedManager = nil;
         } else {
             NSMutableDictionary *dict = [NSMutableDictionary dictionary];
             [dict setObject:query forKey:SQLCipherManagerUserInfoQueryKey];
+            int errCode = sqlite3_errcode(self.database);
+            [dict setObject:@(errCode) forKey:SQLCipherManagerUserInfoErrorCodeKey];
             NSString *errorString = [NSString stringWithFormat:@"SQLite error %d: %s", sqlite3_errcode(self.database), sqlite3_errmsg(self.database)];
             if (self.inTransaction) {
                 NSLog(@"ROLLBACK");
@@ -1270,6 +1291,7 @@ static SQLCipherManager *sharedManager = nil;
         } else {
             NSMutableDictionary *dict = [NSMutableDictionary dictionary];
             [dict setObject:query forKey:SQLCipherManagerUserInfoQueryKey];
+            [dict setObject:@(rc) forKey:SQLCipherManagerUserInfoErrorCodeKey];
             NSString *errorString = [NSString stringWithFormat:@"SQLite error %d: %s", sqlite3_errcode(self.database), sqlite3_errmsg(self.database)];
             if (self.inTransaction) {
                 NSLog(@"ROLLBACK");
@@ -1377,7 +1399,7 @@ static SQLCipherManager *sharedManager = nil;
         success = NO;
         if (error != NULL) {
             const char *errorMessage = sqlite3_errmsg(self.database);
-            NSError *errorObj = [[self class] errorWithSQLitePointer:errorMessage];
+            NSError *errorObj = [[self class] errorWithSQLitePointer:errorMessage resultCode:ERR_SQLCIPHER_COMMAND_FAILED];
             *error = errorObj;
         }
     }

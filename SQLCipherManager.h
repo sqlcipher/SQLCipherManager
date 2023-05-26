@@ -18,6 +18,7 @@
 
 extern NSString *_Nonnull const SQLCipherManagerCommandException;
 extern NSString *_Nonnull const SQLCipherManagerUserInfoQueryKey;
+extern NSString *_Nonnull const SQLCipherManagerUserInfoErrorCodeKey;
 
 @class SQLCipherManager;
 
@@ -167,7 +168,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (NSError *)errorForResultCode:(NSInteger)resultCode;
 + (NSError *)errorForResultCode:(NSInteger)resultCode reason:(NSString * _Nullable)localizedReason;
-+ (NSError *)errorWithDescription:(NSString *)localizedDescription reason:(NSString * _Nullable)localizedReason;
++ (NSError *)errorWithDescription:(NSString *)localizedDescription reason:(NSString * _Nullable)localizedReason resultCode:(NSInteger)resultCode;
 
 - (BOOL)isDatabaseAttachedNamed:(NSString *)databaseName;
 - (NSInteger)numberOfRowsChangedByLastCommand;
