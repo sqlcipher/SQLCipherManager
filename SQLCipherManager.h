@@ -68,6 +68,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly) NSInteger freeListCount;
 @property (readonly) NSInteger pageCount;
 @property (readonly) float freeListRatio;
+// defaults to 5000 ms (5 seconds)
+@property (nonatomic) NSInteger busyTimeoutMs;
 
 - (instancetype)initWithURL:(NSURL *)absoluteUrl;
 - (instancetype)initWithPath:(NSString *)path; // DEPRECATED

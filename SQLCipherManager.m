@@ -16,6 +16,8 @@
 // database name column for database_list
 #define ATTACHED_DATABASE_NAME_COLUMN 1
 
+#define DEFAULT_BUSY_TIMEOUT_MS 5000
+
 NSString * const SQLCipherManagerErrorDomain = @"SQLCipherManagerErrorDomain";
 NSString * const SQLCipherManagerCommandException = @"SQLCipherManagerCommandException";
 NSString * const SQLCipherManagerUserInfoQueryKey = @"SQLCipherManagerUserInfoQueryKey";
@@ -50,6 +52,7 @@ static SQLCipherManager *sharedManager = nil;
         // set up a serial dispatch queue for database operations
         _serialQueue            = dispatch_queue_create([[NSString stringWithFormat:@"SQLCipher.%@", self] UTF8String], NULL);
         dispatch_queue_set_specific(_serialQueue, kDispatchQueueSpecificKey, (__bridge void *)self, NULL);
+        _busyTimeoutMs = DEFAULT_BUSY_TIMEOUT_MS;
     }
     return self;
 }
@@ -348,6 +351,7 @@ static SQLCipherManager *sharedManager = nil;
     sqlite3 *db = nil;
     if (sqlite3_open([[self pathToDatabase] UTF8String], &db) == SQLITE_OK) {
         self.database = db;
+        sqlite3_busy_timeout(self.database, (int)self.busyTimeoutMs);
         [self execute:@"PRAGMA foreign_keys = ON;" error:NULL];
         // HMAC page protection is enabled by default in SQLCipher 2.0
         if (useHMAC == NO) {
