@@ -37,6 +37,7 @@ static const void * const kDispatchQueueSpecificKey = &kDispatchQueueSpecificKey
 @implementation SQLCipherManager
 // needs to be synthesized since we're implementing both the getter and setter (Control is ours!)
 @synthesize cachedPassword = _cachedPassword;
+@synthesize cachedHexKey = _cachedHexKey;
 
 @dynamic freeListCount;
 @dynamic pageCount;
@@ -207,6 +208,20 @@ static SQLCipherManager *sharedManager = nil;
             memset((void *)[_cachedPassword UTF8String], 0, [_cachedPassword length]);
         }
         _cachedPassword = mutableCopy;
+    }
+}
+
+- (NSString *)cachedHexKey {
+    return _cachedHexKey;
+}
+
+- (void)setCachedHexKey:(NSString *)cachedHexKey {
+    if (_cachedHexKey != cachedHexKey) {
+        NSString *cachedHexKeyCopy = [cachedHexKey copy];
+        if (_cachedHexKey != nil) {
+            memset((void *)[_cachedHexKey UTF8String], 0, [_cachedHexKey length]);
+        }
+        _cachedHexKey = cachedHexKeyCopy;
     }
 }
 
@@ -722,7 +737,7 @@ static SQLCipherManager *sharedManager = nil;
             sqlite3_close(self.database);
         } else {
             // TODO: make a cached data in place of cached password maybe?
-            
+            self.cachedHexKey = rawHexKey;
         }
     } else {
         NSAssert1(0, @"Unable to open database file '%s'", sqlite3_errmsg(self.database));
@@ -894,7 +909,7 @@ static SQLCipherManager *sharedManager = nil;
     }
     // if successful, update cached password
     if (failed == NO) {
-        self.cachedPassword = rawHexKey;
+        self.cachedHexKey = rawHexKey;
     }
     return (failed) ? NO : YES;
 }
@@ -1468,6 +1483,9 @@ static SQLCipherManager *sharedManager = nil;
 - (void)dealloc {
     if(_cachedPassword) {
         memset((void *)[_cachedPassword UTF8String], 0, [_cachedPassword length]);
+    }
+    if (_cachedHexKey) {
+        memset((void *)[_cachedHexKey UTF8String], 0, [_cachedHexKey length]);
     }
 }
 

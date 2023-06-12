@@ -55,6 +55,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak, nullable) id<SQLCipherManagerDelegate> delegate;
 
 @property (nonatomic, strong, nullable) NSString *cachedPassword;
+@property (nonatomic, strong, nullable) NSString *cachedHexKey;
 @property (nonatomic, strong, nullable) NSString *databasePath;
 @property (nonatomic, strong, nullable) NSURL *databaseUrl;
 @property (nonatomic) BOOL useHMACPageProtection;
