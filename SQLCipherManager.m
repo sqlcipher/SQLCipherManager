@@ -1442,7 +1442,7 @@ static SQLCipherManager *sharedManager = nil;
     sqlite3_stmt *stmt;
     @try {
         NSString *databaseListQuery = @"PRAGMA database_list";
-        if (sqlite3_prepare(self.database, [databaseListQuery UTF8String], -1, &stmt, NULL) == SQLITE_OK) {
+        if (sqlite3_prepare_v2(self.database, [databaseListQuery UTF8String], -1, &stmt, NULL) == SQLITE_OK) {
             const unsigned char * cValue;
             NSString *val = nil;
             while (sqlite3_step(stmt) == SQLITE_ROW) {
