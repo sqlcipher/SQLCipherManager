@@ -182,6 +182,13 @@ NS_ASSUME_NONNULL_BEGIN
 /// @See `freeListCount`, `pageCount`, `freeListRatio`.
 - (void)vacuum;
 
+
+/// Runs `sqlite3_status64` to obtain the in-use memory of SQLite.
+///
+/// Returns @c -1 if the SQLite call returns a code other than @c SQLITE_OK and attempts to populate the error parameter if provided.
+/// @param error An error out-parameter that will be populated if `sqlite3_status64` fails.
+- (NSInteger)memoryUsedBySQLite:(NSError *_Nullable*_Nullable)error;
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -7,6 +7,7 @@
 //
 
 #import "SQLCipherManager.h"
+#import <os/log.h>
 
 #define kSQLCipherRollback @"rollback"
 #define kSQLCipherRekey @"rekey"
@@ -1478,6 +1479,28 @@ static SQLCipherManager *sharedManager = nil;
 
 - (void)vacuum {
     [self execute:@"VACUUM;"];
+}
+
+- (NSInteger)memoryUsedBySQLite:(NSError *_Nullable*_Nullable)error {
+    NSInteger current = -1;
+    NSInteger highwater;
+    int rc = sqlite3_status64(SQLITE_STATUS_MEMORY_USED, &current, &highwater, 0);
+    if (rc != SQLITE_OK) {
+        const char *errstr = sqlite3_errstr(rc);
+        NSString *message = nil;
+        if (errstr != NULL) {
+            message = [NSString stringWithUTF8String:errstr];
+        } else {
+            message = [NSString stringWithFormat:@"SQLite result code: %d", rc];
+        }
+        os_log_error(OS_LOG_DEFAULT, "Unable to fetch memory used: %@", message);
+        if (error != NULL) {
+            *error = [[self class] errorWithDescription:@"Unable to fetch memory used"
+                                                 reason:message
+                                             resultCode:rc];
+        }
+    }
+    return current;
 }
 
 - (void)dealloc {
