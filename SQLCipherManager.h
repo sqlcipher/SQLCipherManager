@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #ifdef ZETETIC_SQLCIPHER_MANAGER_IN_FRAMEWORK
-#import <ZTDataModel/sqlite3.h>
+#import <SQLCipher/sqlite3.h>
 #else
 #import "sqlite3.h"
 #endif
