@@ -286,7 +286,7 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (BOOL)openDatabaseWithOptions:(NSString *)password
-                         cipher:(NSString *)cipher
+                         cipher:(NSString *_Nullable)cipher
                      iterations:(NSInteger)iterations {
     return [self openDatabaseWithOptions:password
                                   cipher:cipher
@@ -295,7 +295,7 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (BOOL)openDatabaseWithOptions:(NSString *)password
-                         cipher:(NSString *)cipher
+                         cipher:(NSString *_Nullable)cipher
                      iterations:(NSInteger)iterations
                        withHMAC:(BOOL)useHMAC {
     return [self openDatabaseWithOptions:password
@@ -306,7 +306,7 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (BOOL)openDatabaseWithOptions:(NSString *)password
-                         cipher:(NSString *)cipher
+                         cipher:(NSString *_Nullable)cipher
                      iterations:(NSInteger)iterations
                        withHMAC:(BOOL)useHMAC
                         license:(NSString *)licenseKey {
@@ -320,7 +320,7 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (BOOL)openDatabaseWithOptions:(NSString *)password
-                         cipher:(NSString *)cipher
+                         cipher:(NSString *_Nullable)cipher
                      iterations:(NSInteger)iterations
                        withHMAC:(BOOL)useHMAC
                        pageSize:(NSInteger)pageSize
@@ -335,7 +335,7 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (BOOL)openDatabaseWithOptions:(NSString *)password
-                         cipher:(NSString *)cipher
+                         cipher:(NSString *_Nullable)cipher
                      iterations:(NSInteger)iterations
                        withHMAC:(BOOL)useHMAC
                        pageSize:(NSInteger)pageSize
@@ -352,7 +352,7 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (BOOL)openDatabaseWithOptions:(NSString *)password
-                         cipher:(NSString *)cipher
+                         cipher:(NSString *_Nullable)cipher
                      iterations:(NSInteger)iterations
                        withHMAC:(BOOL)useHMAC
                        pageSize:(NSInteger)pageSize
@@ -473,7 +473,7 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (BOOL)rekeyDatabaseWithOptions:(NSString *)password
-                          cipher:(NSString *)cipher
+                          cipher:(NSString *_Nullable)cipher
                       iterations:(NSInteger)iterations
                            error:(NSError **)error {
     if (self.delegate && [self.delegate respondsToSelector:@selector(sqlCipherManagerWillRekeyDatabase)])

@@ -89,12 +89,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)openDatabaseWithPassword:(NSString *)password license:(NSString *_Nullable)licenseKey;
 - (BOOL)openDatabaseWithCachedPassword;
 - (BOOL)openDatabaseWithCachedPasswordAndLicense:(NSString *_Nullable)licenseKey;
-- (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *)cipher iterations:(NSInteger)iterations;
-- (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC;
-- (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC license:(NSString *_Nullable)licenseKey;
-- (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC pageSize:(NSInteger)pageSize license:(NSString *_Nullable)license;
-- (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC pageSize:(NSInteger)pageSize kdfAlgo:(PBKDF2_HMAC_ALGORITHM)kdfAlgo license:(NSString *_Nullable)license;
-- (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC pageSize:(NSInteger)pageSize kdfAlgo:(PBKDF2_HMAC_ALGORITHM)kdfAlgo hmacAlgo:(HMAC_ALGORITHM)hmacAlgo license:(NSString *_Nullable)license;
+- (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *_Nullable)cipher iterations:(NSInteger)iterations;
+- (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *_Nullable)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC;
+- (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *_Nullable)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC license:(NSString *_Nullable)licenseKey;
+- (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *_Nullable)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC pageSize:(NSInteger)pageSize license:(NSString *_Nullable)license;
+- (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *_Nullable)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC pageSize:(NSInteger)pageSize kdfAlgo:(PBKDF2_HMAC_ALGORITHM)kdfAlgo license:(NSString *_Nullable)license;
+- (BOOL)openDatabaseWithOptions:(NSString *)password cipher:(NSString *_Nullable)cipher iterations:(NSInteger)iterations withHMAC:(BOOL)useHMAC pageSize:(NSInteger)pageSize kdfAlgo:(PBKDF2_HMAC_ALGORITHM)kdfAlgo hmacAlgo:(HMAC_ALGORITHM)hmacAlgo license:(NSString *_Nullable)license;
 - (BOOL)openAndRekeyCFBDatabaseWithPassword:(NSString *)password __attribute__((deprecated));
 - (BOOL)rekeyDatabaseWithPassword:(NSString *)password;
 - (BOOL)rekeyDatabaseWithOptions:(NSString *)password
@@ -111,10 +111,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)createDatabaseWithRawData:(NSString *)rawHexKey license:(NSString *_Nullable)licenseKey;
 - (BOOL)openDatabaseWithRawData:(NSString *)rawHexKey;
 - (BOOL)openDatabaseWithRawData:(NSString *)rawHexKey license:(NSString *_Nullable)licenseKey;
-- (BOOL)openDatabaseWithRawData:(NSString *)rawHexKey cipher:(NSString *)cipher withHMAC:(BOOL)useHMAC;
-- (BOOL)openDatabaseWithRawData:(NSString *)rawHexKey cipher:(NSString *)cipher withHMAC:(BOOL)useHMAC license:(NSString *_Nullable)licenseKey;
+- (BOOL)openDatabaseWithRawData:(NSString *)rawHexKey cipher:(NSString *_Nullable)cipher withHMAC:(BOOL)useHMAC;
+- (BOOL)openDatabaseWithRawData:(NSString *)rawHexKey cipher:(NSString *_Nullable)cipher withHMAC:(BOOL)useHMAC license:(NSString *_Nullable)licenseKey;
 - (BOOL)rekeyDatabaseWithRawData:(NSString *)rawHexKey;
-- (BOOL)rekeyDatabaseRawDataWithOptions:(NSString *)rawHexKey cipher:(NSString *)cipher iterations:(NSInteger)iterations error:(NSError *_Nullable*_Nullable)error;
+- (BOOL)rekeyDatabaseRawDataWithOptions:(NSString *)rawHexKey cipher:(NSString *_Nullable)cipher iterations:(NSInteger)iterations error:(NSError *_Nullable*_Nullable)error;
 
 // Backup and File Location methods
 - (NSString *)databaseDirectory;
