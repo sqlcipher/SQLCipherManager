@@ -1481,9 +1481,9 @@ static SQLCipherManager *sharedManager = nil;
     [self execute:@"VACUUM;"];
 }
 
-- (NSInteger)memoryUsedBySQLite:(NSError *_Nullable*_Nullable)error {
-    NSInteger current = -1;
-    NSInteger highwater;
+- (long long)memoryUsedBySQLite:(NSError *_Nullable*_Nullable)error {
+    long long current = -1;
+    long long highwater;
     int rc = sqlite3_status64(SQLITE_STATUS_MEMORY_USED, &current, &highwater, 0);
     if (rc != SQLITE_OK) {
         const char *errstr = sqlite3_errstr(rc);
