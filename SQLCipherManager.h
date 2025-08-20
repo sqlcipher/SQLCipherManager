@@ -147,6 +147,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSString *_Nullable)getScalar:(NSString *)query;
 - (NSString *_Nullable)getScalarWith:(NSString *)query __attribute__((deprecated));
 - (NSString *_Nullable)getScalar:(NSString *)query with:(NSArray *_Nullable)params;
+- (NSString *)getScalar:(NSString *)query with:(NSArray *)params error:(NSError *_Nullable*_Nullable)error;
 - (NSData *_Nullable)getBlobWith:(NSString *)query;
 - (NSInteger)countForSQL:(NSString *)countSQL;
 - (NSInteger)countForSQL:(NSString *)countSQL with:(NSArray *)params;

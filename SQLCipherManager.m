@@ -1245,6 +1245,10 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (NSString *)getScalar:(NSString *)query with:(NSArray *)params {
+    return [self getScalar:query with:params error:nil];
+}
+
+- (NSString *)getScalar:(NSString *)query with:(NSArray *)params error:(NSError *_Nullable*_Nullable)error {
     sqlite3_stmt *stmt;
     NSInteger idx = 0;
     NSString *scalar = nil;
@@ -1272,17 +1276,28 @@ static SQLCipherManager *sharedManager = nil;
                 }
             }
         } else {
-            NSMutableDictionary *dict = [NSMutableDictionary dictionary];
-            [dict setObject:query forKey:SQLCipherManagerUserInfoQueryKey];
-            int errCode = sqlite3_errcode(self.database);
-            [dict setObject:@(errCode) forKey:SQLCipherManagerUserInfoErrorCodeKey];
-            NSString *errorString = [NSString stringWithFormat:@"SQLite error %d: %s", sqlite3_errcode(self.database), sqlite3_errmsg(self.database)];
-            if (self.inTransaction) {
-                NSLog(@"ROLLBACK");
-                [self rollbackTransaction];
+            // if we have an error object, fill that
+            if (error != NULL) {
+                const char *errorMessage = sqlite3_errmsg(self.database);
+                NSError *errorObj = [[self class] errorWithSQLitePointer:errorMessage resultCode:rc];
+                *error = errorObj;
+                if (self.inTransaction) {
+                    NSLog(@"ROLLBACK");
+                    [self rollbackTransaction];
+                }
+            } else {
+                NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+                [dict setObject:query forKey:SQLCipherManagerUserInfoQueryKey];
+                int errCode = sqlite3_errcode(self.database);
+                [dict setObject:@(errCode) forKey:SQLCipherManagerUserInfoErrorCodeKey];
+                NSString *errorString = [NSString stringWithFormat:@"SQLite error %d: %s", sqlite3_errcode(self.database), sqlite3_errmsg(self.database)];
+                if (self.inTransaction) {
+                    NSLog(@"ROLLBACK");
+                    [self rollbackTransaction];
+                }
+                NSException *e = [NSException exceptionWithName:SQLCipherManagerCommandException reason:errorString userInfo:dict];
+                @throw e;
             }
-            NSException *e = [NSException exceptionWithName:SQLCipherManagerCommandException reason:errorString userInfo:dict];
-            @throw e;
         }
     }
     @finally {
