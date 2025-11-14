@@ -46,6 +46,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)didEncounterDatabaseError:(NSString *_Nullable)error;
 - (void)sqlCipherManagerWillRekeyDatabase;
 - (void)sqlCipherManagerDidRekeyDatabase;
+- (void)didCloseDatabase;
 @end
 
 @interface SQLCipherManager : NSObject

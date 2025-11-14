@@ -648,6 +648,9 @@ static SQLCipherManager *sharedManager = nil;
     sqlite3_close(self.database);
     self.inTransaction = NO;
     self.database = nil;
+    if ([self.delegate respondsToSelector:@selector(didCloseDatabase)]) {
+        [self.delegate didCloseDatabase];
+    }
 }
 
 - (void)reallyCloseDatabase {
@@ -659,6 +662,9 @@ static SQLCipherManager *sharedManager = nil;
     }
     self.inTransaction = NO;
     self.database = nil;
+    if ([self.delegate respondsToSelector:@selector(didCloseDatabase)]) {
+        [self.delegate didCloseDatabase];
+    }
 }
 
 - (BOOL)isDatabaseUnlocked {
