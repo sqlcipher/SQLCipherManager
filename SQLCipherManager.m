@@ -366,35 +366,36 @@ static SQLCipherManager *sharedManager = nil;
     }
     sqlite3 *db = nil;
     if (sqlite3_open([[self pathToDatabase] UTF8String], &db) == SQLITE_OK) {
-        self.database = db;
-        sqlite3_busy_timeout(self.database, (int)self.busyTimeoutMs);
-        [self execute:@"PRAGMA foreign_keys = ON;" error:NULL];
+        SQLCipherManager *tempManager = [[SQLCipherManager alloc] initWithURL:self.databaseUrl];
+        tempManager.database = db;
+        sqlite3_busy_timeout(tempManager.database, (int)self.busyTimeoutMs);
+        [tempManager execute:@"PRAGMA foreign_keys = ON;" error:NULL];
         // HMAC page protection is enabled by default in SQLCipher 2.0
         if (useHMAC == NO) {
-            [self execute:@"PRAGMA cipher_default_use_hmac = OFF;" error:NULL];
+            [tempManager execute:@"PRAGMA cipher_default_use_hmac = OFF;" error:NULL];
         } else {
-            [self execute:@"PRAGMA cipher_default_use_hmac = ON;" error:NULL];
+            [tempManager execute:@"PRAGMA cipher_default_use_hmac = ON;" error:NULL];
         }
         // submit the password
         const char *key = [password UTF8String];
-        sqlite3_key(self.database, key, (int)strlen(key));
+        sqlite3_key(tempManager.database, key, (int)strlen(key));
         // specify the license if one is present
         if (licenseKey) {
             NSString *licensePragma = [NSString stringWithFormat:@"PRAGMA cipher_license = '%@';", licenseKey];
-            [self execute:licensePragma];
+            [tempManager execute:licensePragma];
         }
         // both cipher and kdf_iter must be specified AFTER key
         if (cipher) {
-            [self execute:[NSString stringWithFormat:@"PRAGMA cipher='%@';", cipher] error:NULL];
+            [tempManager execute:[NSString stringWithFormat:@"PRAGMA cipher='%@';", cipher] error:NULL];
         }
         if (iterations > 0) {
-            [self execute:[NSString stringWithFormat:@"PRAGMA kdf_iter='%d';", (int)iterations] error:NULL];
+            [tempManager execute:[NSString stringWithFormat:@"PRAGMA kdf_iter='%d';", (int)iterations] error:NULL];
         }
         // check if we have a page size (-1 indicates use the default)
         // make sure we're in between valid sqlite page sizes and that we're a power of 2
         if (pageSize >= 512 && pageSize <= 65536 && (pageSize & (pageSize -1)) == 0) {
             NSString *pageSizePragma = [NSString stringWithFormat:@"PRAGMA cipher_page_size = '%li';", pageSize];
-            [self execute:pageSizePragma];
+            [tempManager execute:pageSizePragma];
         } else if (pageSize != -1) { // unless we supplied -1 (use default page size) log an error
             NSLog(@">> Invalid Page Size supplied (%li), ignoring", pageSize);
         }
@@ -402,23 +403,32 @@ static SQLCipherManager *sharedManager = nil;
         NSString *nameForKdfAlgo = [self _nameForKdfAlgo:kdfAlgo];
         // we only return non-nill here if it's a valid algo
         if (nameForKdfAlgo) {
-            [self execute:[NSString stringWithFormat:@"PRAGMA cipher_kdf_algorithm = %@;", nameForKdfAlgo]];
+            [tempManager execute:[NSString stringWithFormat:@"PRAGMA cipher_kdf_algorithm = %@;", nameForKdfAlgo]];
         }
         // now see if an hmac algo is specified
         NSString *nameForHmacAlgo = [self _nameForHmacAlgo:hmacAlgo];
         if (nameForHmacAlgo) {
-            [self execute:[NSString stringWithFormat:@"PRAGMA cipher_hmac_algorithm = %@;", nameForHmacAlgo]];
+            [tempManager execute:[NSString stringWithFormat:@"PRAGMA cipher_hmac_algorithm = %@;", nameForHmacAlgo]];
         }
-        unlocked = [self isDatabaseUnlocked];
+        unlocked = [tempManager isDatabaseUnlocked];
         if (unlocked == NO) {
-            sqlite3_close(self.database);
+            sqlite3_close(tempManager.database);
         } else {
-            self.cachedPassword = password;
-            if (newDatabase == YES) {
-                if (self.delegate && [self.delegate respondsToSelector:@selector(didCreateDatabase:)]) {
-                    [self.delegate didCreateDatabase:self];
+            // if we're already unlocked, we should be all set
+            if ([self isDatabaseUnlocked] == NO) {
+                // we weren't already unlocked, set our database pointer and cached password
+                self.database = tempManager.database;
+                self.cachedPassword = password;
+                if (newDatabase == YES) {
+                    if (self.delegate && [self.delegate respondsToSelector:@selector(didCreateDatabase:)]) {
+                        [self.delegate didCreateDatabase:self];
+                    }
                 }
             } else {
+                // continue using the open db, close out the temp db
+                sqlite3_close(tempManager.database);
+            }
+            if (newDatabase == NO) {
                 if (self.delegate && [self.delegate respondsToSelector:@selector(didOpenDatabase:)]) {
                     [self.delegate didOpenDatabase:self];
                 }
