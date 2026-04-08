@@ -49,11 +49,17 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)didCloseDatabase;
 @end
 
+@protocol SQLCipherLogger <NSObject>
+- (void)addTextToAppLog:(NSString *)text;
+@end
+
 @interface SQLCipherManager : NSObject
 
 @property (nonatomic, nullable) sqlite3 *database;
 @property (nonatomic) BOOL inTransaction;
 @property (nonatomic, weak, nullable) id<SQLCipherManagerDelegate> delegate;
+@property (nonatomic, weak, nullable) id<SQLCipherLogger> logger;
+
 
 @property (nonatomic, strong, nullable) NSString *cachedPassword;
 @property (nonatomic, strong, nullable) NSString *cachedHexKey;

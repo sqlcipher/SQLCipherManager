@@ -77,6 +77,9 @@ static SQLCipherManager *sharedManager = nil;
      * and then check it against self to make sure we're not about to deadlock. */
     // Credit for this goes to Gus Mueller and his implementation in fmdb/FMDatabaseQueue
     SQLCipherManager *currentManager = (__bridge id)dispatch_get_specific(kDispatchQueueSpecificKey);
+    if (currentManager == self) {
+        [self.logger addTextToAppLog:@"(SQLCipherMnager) - inQueue: was called reentrantly on the same queue, which would lead to a deadlock"];
+    }
     NSAssert(currentManager != self, @"inQueue: was called reentrantly on the same queue, which would lead to a deadlock");
     dispatch_sync(self.serialQueue, ^{
         @autoreleasepool {
@@ -90,6 +93,9 @@ static SQLCipherManager *sharedManager = nil;
      * and then check it against self to make sure we're not about to deadlock. */
     // Credit for this goes to Gus Mueller and his implementation in fmdb/FMDatabaseQueue
     SQLCipherManager *currentManager = (__bridge id)dispatch_get_specific(kDispatchQueueSpecificKey);
+    if (currentManager == self) {
+        [self.logger addTextToAppLog:@"(SQLCipherMnager) - inQueueAsync: was called reentrantly on the same queue, which would lead to a deadlock"];
+    }
     NSAssert(currentManager != self, @"inQueue: was called reentrantly on the same queue, which would lead to a deadlock");
     dispatch_async(self.serialQueue, ^{
         @autoreleasepool {
@@ -435,6 +441,8 @@ static SQLCipherManager *sharedManager = nil;
             }
         }
     } else {
+        NSString *logText = [NSString stringWithFormat:@"(SQLCipherMnager) - openDatabaseWithOptions: Unable to open database file '%s'", sqlite3_errmsg(self.database)];
+        [self.logger addTextToAppLog:logText];
         NSAssert1(0, @"Unable to open database file '%s'", sqlite3_errmsg(self.database));
     }
     return unlocked;
@@ -757,6 +765,9 @@ static SQLCipherManager *sharedManager = nil;
             self.cachedHexKey = rawHexKey;
         }
     } else {
+        NSString *logText = [NSString stringWithFormat:@"(SQLCipherMnager) - openDatabaseWithRawData: Unable to open database file '%s'",
+                             sqlite3_errmsg(self.database)];
+        [self.logger addTextToAppLog:logText];
         NSAssert1(0, @"Unable to open database file '%s'", sqlite3_errmsg(self.database));
     }
     return unlocked;
@@ -1045,6 +1056,8 @@ static SQLCipherManager *sharedManager = nil;
         }
     }
     else {
+        NSString *logText = [NSString stringWithFormat:@"(SQLCipherMnager) Failed to create replica '%s'", sqlite3_errmsg(replica)];
+        [self.logger addTextToAppLog:logText];
         NSAssert1(0, @"Failed to create replica '%s'", sqlite3_errmsg(replica));
     }
     return success;
@@ -1096,6 +1109,10 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (void)setSchemaVersion:(NSInteger)newVersion {
+    if (newVersion < 1) {
+        NSString *logText = [NSString stringWithFormat:@"(SQLCipherMnager) New version %d is less than zero, only signed integers allowed", (int)newVersion];
+        [self.logger addTextToAppLog:logText];
+    }
     NSAssert1(newVersion >= 0, @"New version %d is less than zero, only signed integers allowed", (int)newVersion);
     NSString *sql = [NSString stringWithFormat:@"PRAGMA user_version = '%d';", (int)newVersion];
     [self execute:sql];
@@ -1181,6 +1198,8 @@ static SQLCipherManager *sharedManager = nil;
             }
         }
         else {
+            NSString *logText = [NSString stringWithFormat:@"(SQLCipherMnager) - execute:withBlock: Unable to prepare query '%s'", sqlite3_errmsg(self.database)];
+            [self.logger addTextToAppLog:logText];
             NSAssert1(0, @"Unable to prepare query '%s'", sqlite3_errmsg(self.database));
         }
     }
