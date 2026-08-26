@@ -10,7 +10,10 @@
 #ifdef ZETETIC_SQLCIPHER_MANAGER_IN_FRAMEWORK
 #import <SQLCipher/sqlite3.h>
 #else
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wquoted-include-in-framework-header"
 #import "sqlite3.h"
+#pragma clang diagnostic pop
 #endif
 
 
