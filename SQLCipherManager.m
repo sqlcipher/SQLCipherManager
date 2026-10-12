@@ -73,6 +73,7 @@ static SQLCipherManager *sharedManager = nil;
 }
 
 - (void)inQueue:(void (^)(SQLCipherManager *manager))block {
+    __block NSException *caughtException = nil;
     /* Get the currently executing queue (which should probably be nil, but in theory could be another DB queue
      * and then check it against self to make sure we're not about to deadlock. */
     // Credit for this goes to Gus Mueller and his implementation in fmdb/FMDatabaseQueue
@@ -82,10 +83,17 @@ static SQLCipherManager *sharedManager = nil;
     }
     NSAssert(currentManager != self, @"inQueue: was called reentrantly on the same queue, which would lead to a deadlock");
     dispatch_sync(self.serialQueue, ^{
-        @autoreleasepool {
-            block(self);
+        @try {
+            @autoreleasepool {
+                block(self);
+            }
+        } @catch (NSException *e) {
+            caughtException = e;
         }
     });
+    if (caughtException != nil) {
+        [caughtException raise];
+    }
 }
 
 - (void)inQueueAsync:(void (^)(SQLCipherManager *manager))block {
